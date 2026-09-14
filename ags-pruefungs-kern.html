@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGS Prüfungs-Kern</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Lexend+Deca:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF6EF;
+    --bg-card:#FFFFFF;
+    --ink:#2C332F;
+    --ink-soft:#5B655F;
+    --line:#E4DFD3;
+    --teal:#3F7168;
+    --teal-dark:#2C534C;
+    --teal-tint:#E4EEEB;
+    --a:#B5544B;
+    --a-tint:#F4E4E1;
+    --b:#B8862E;
+    --b-tint:#F6ECD8;
+    --c:#5C8A6B;
+    --c-tint:#E7F0E9;
+    --ipa:#7A5C9E;
+    --ipa-tint:#EFE7F3;
+    --good:#3F7168;
+    --good-tint:#E1EEE9;
+    --gentle:#B5544B;
+    --gentle-tint:#F4E4E1;
+    --radius:14px;
+    --maxw:760px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth; font-size:87.5%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Lexend Deca','Lexend',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.headline{ font-family:'Lexend',sans-serif; }
+  a{color:var(--teal-dark);}
+  button{ font-family:inherit; }
+
+  .wrap{ max-width:var(--maxw); margin:0 auto; padding:20px 18px 80px; }
+
+  header.top{
+    padding:28px 18px 20px;
+    border-bottom:1px solid var(--line);
+    background:var(--bg);
+    position:sticky; top:0; z-index:20;
+  }
+  header.top .inner{ max-width:var(--maxw); margin:0 auto; }
+  header.top h1{ font-size:1.5rem; margin:0 0 4px; font-weight:700; letter-spacing:-0.01em; }
+  header.top p{ margin:0; color:var(--ink-soft); font-size:0.95rem; }
+  .backbar{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .backbtn{
+    background:none; border:none; color:var(--teal-dark); font-size:0.95rem;
+    cursor:pointer; padding:4px 0; display:flex; align-items:center; gap:6px; font-weight:500;
+  }
+  .backbtn:hover{ text-decoration:underline; }
+
+  .overall-progress{
+    margin-top:14px; height:8px; border-radius:6px; background:var(--line); overflow:hidden;
+  }
+  .overall-progress > div{ height:100%; background:var(--teal); border-radius:6px; transition:width .4s ease; }
+  .overall-note{ font-size:0.82rem; color:var(--ink-soft); margin-top:6px; }
+
+  .legend{
+    display:flex; gap:10px; flex-wrap:wrap; margin:18px 0 6px;
+  }
+  .legend span{
+    font-size:0.82rem; padding:5px 10px; border-radius:20px; font-weight:500;
+  }
+  .legend .A{ background:var(--a-tint); color:var(--a); }
+  .legend .B{ background:var(--b-tint); color:var(--b); }
+  .legend .C{ background:var(--c-tint); color:var(--c); }
+
+  .section-title{
+    font-size:1.05rem; font-weight:700; margin:30px 0 4px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-title .dot{ width:12px; height:12px; border-radius:50%; flex:none; }
+  .section-desc{ color:var(--ink-soft); font-size:0.9rem; margin:0 0 14px; }
+
+  .topic-grid{ display:flex; flex-direction:column; gap:10px; }
+  .topic-card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 16px; display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; gap:12px; text-align:left; width:100%;
+  }
+  .topic-card:hover{ border-color:var(--teal); }
+  .topic-card .tleft{ display:flex; flex-direction:column; gap:3px; }
+  .topic-card .ttitle{ font-weight:600; font-size:0.98rem; }
+  .topic-card .tmeta{ font-size:0.8rem; color:var(--ink-soft); }
+  .check{
+    width:26px; height:26px; border-radius:50%; flex:none; display:flex; align-items:center;
+    justify-content:center; font-size:0.85rem; border:2px solid var(--line); color:transparent;
+  }
+  .check.done{ background:var(--good); border-color:var(--good); color:#fff; }
+  .check.partial{ border-color:var(--teal); color:var(--teal); font-size:0.7rem; font-weight:700; }
+
+  .c-list{ background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius); padding:6px 16px; }
+  .c-item{ padding:12px 0; border-bottom:1px solid var(--line); }
+  .c-item:last-child{ border-bottom:none; }
+  .c-item .ttitle{ font-weight:600; font-size:0.95rem; margin-bottom:2px; }
+  .c-item .tdesc{ font-size:0.88rem; color:var(--ink-soft); }
+
+  .howto{
+    background:var(--teal-tint); border-radius:var(--radius); padding:16px 18px; margin:20px 0 8px;
+  }
+  .howto h3{ margin:0 0 10px; font-size:0.95rem; color:var(--teal-dark); }
+  .howto-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:520px){ .howto-grid{ grid-template-columns:1fr; } }
+  .howto-item{ display:flex; gap:10px; align-items:flex-start; font-size:0.85rem; }
+
+  .tips-entry{
+    background:var(--bg-card); border:1.5px solid var(--teal); border-radius:var(--radius);
+    padding:16px 18px; margin:18px 0 8px; display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; gap:12px; width:100%; text-align:left;
+  }
+  .tips-entry:hover{ background:var(--teal-tint); }
+  .tips-entry .tleft{ display:flex; flex-direction:column; gap:3px; }
+  .tips-entry .ttitle{ font-weight:700; font-size:1rem; color:var(--teal-dark); }
+  .tips-entry .tmeta{ font-size:0.85rem; color:var(--ink-soft); }
+  .tips-entry .arrow{ font-size:1.3rem; color:var(--teal); flex:none; }
+
+  .level-card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px 14px; margin-bottom:10px; display:flex; gap:10px;
+  }
+  .level-num{
+    flex:none; width:26px; height:26px; border-radius:50%; background:var(--teal); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.82rem;
+  }
+  .level-body{ flex:1; }
+  .level-title{ font-weight:700; font-size:0.9rem; margin-bottom:2px; }
+  .level-question{ font-size:0.8rem; color:var(--teal-dark); font-style:italic; margin-bottom:6px; }
+  .level-signals{ display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px; }
+  .signal-tag{ background:var(--teal-tint); color:var(--teal-dark); font-size:0.72rem; padding:2px 8px; border-radius:20px; }
+  .level-example{ background:var(--bg); border-radius:8px; padding:8px 10px; font-size:0.78rem; margin-bottom:6px; }
+  .level-example strong{ color:var(--ink); }
+  .level-tip{ font-size:0.78rem; color:var(--ink-soft); }
+  .level-tip strong{ color:var(--ink); }
+
+  .worked-table{ width:100%; border-collapse:collapse; font-size:0.86rem; margin:10px 0 20px; }
+  .worked-table th{ text-align:left; padding:8px 10px; border-bottom:2px solid var(--line); font-size:0.76rem; color:var(--ink-soft); }
+  .worked-table td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .worked-table .wnum{ width:30px; height:30px; border-radius:50%; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.82rem; }
+
+  .strategy-box{
+    background:var(--b-tint); border-radius:var(--radius); padding:18px 20px; margin:20px 0;
+  }
+  .strategy-box h3{ margin:0 0 10px; font-size:0.95rem; color:var(--b); }
+  .strategy-box ol{ margin:0; padding-left:20px; }
+  .strategy-box li{ margin-bottom:8px; font-size:0.9rem; }
+
+  .accordion-item{ border:1px solid var(--line); border-radius:var(--radius); margin-bottom:8px; overflow:hidden; background:var(--bg-card); }
+  .accordion-header{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:none; border:none; padding:12px 14px; cursor:pointer; text-align:left; font-family:inherit;
+  }
+  .accordion-header:hover{ background:var(--teal-tint); }
+  .accordion-title{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:0.85rem; }
+  .accordion-chevron{ font-size:0.85rem; color:var(--ink-soft); transition:transform .2s ease; flex:none; }
+  .accordion-chevron.open{ transform:rotate(180deg); }
+  .accordion-body{ padding:0 14px 14px; }
+
+  .karten-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:10px; margin-top:6px; }
+  .karte{ border-radius:12px; padding:12px; border:1.5px solid var(--line); border-left:5px solid var(--k-color, var(--teal)); background:var(--bg); }
+  .karte-emoji{ font-size:1rem; margin-right:5px; }
+  .karte-title{ font-weight:700; font-size:0.8rem; margin-bottom:8px; line-height:1.35; }
+  .karte-sub{ font-size:0.68rem; color:var(--ink-soft); margin-bottom:2px; text-transform:uppercase; letter-spacing:0.02em; }
+  .karte-action{ font-size:0.8rem; font-weight:500; }
+
+  .story-wrap{ background:var(--bg-card); border:1.5px solid var(--teal); border-radius:var(--radius); padding:14px 16px 6px; margin:14px 0 20px; }
+  .story-situation{ background:var(--teal-tint); border-radius:10px; padding:10px 12px; font-size:0.85rem; margin-bottom:12px; color:var(--teal-dark); font-weight:500; }
+  .story-step{ display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; }
+  .story-step .snum{ flex:none; width:24px; height:24px; border-radius:50%; background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.75rem; }
+  .story-step .stext{ flex:1; padding-top:3px; }
+  .story-step .slabel{ font-weight:700; font-size:0.88rem; margin-bottom:2px; }
+  .story-step .sbody{ font-size:0.92rem; }
+  .story-connector{ width:2px; height:10px; background:var(--line); margin-left:14px; }
+  .howto-icon{
+    width:28px; height:28px; border-radius:8px; background:#fff; display:flex; align-items:center;
+    justify-content:center; flex:none; font-size:1rem;
+  }
+
+  /* topic view */
+  .badge{
+    display:inline-block; font-size:0.78rem; font-weight:600; padding:4px 10px; border-radius:20px;
+    margin-bottom:10px;
+  }
+  .badge.A{ background:var(--a-tint); color:var(--a); }
+  .badge.B{ background:var(--b-tint); color:var(--b); }
+  .badge.C{ background:var(--c-tint); color:var(--c); }
+  .badge.IPA{ background:var(--ipa-tint); color:var(--ipa); }
+  .legend .IPA{ background:var(--ipa-tint); color:var(--ipa); }
+
+  .comp-table{ width:100%; border-collapse:collapse; font-size:0.88rem; }
+  .comp-table th{ text-align:left; font-weight:600; padding:8px 10px; border-bottom:2px solid var(--line); color:var(--ink-soft); font-size:0.78rem; }
+  .comp-table td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  .comp-table tr:last-child td{ border-bottom:none; }
+  .comp-hkb-row td{ background:var(--teal-tint); font-weight:600; color:var(--teal-dark); padding:7px 10px; font-size:0.82rem; }
+  .comp-code{ font-weight:700; color:var(--ipa); white-space:nowrap; }
+  .comp-status{ text-align:center; width:34px; }
+  .comp-check{ display:inline-flex; width:22px; height:22px; border-radius:50%; align-items:center; justify-content:center; font-size:0.72rem; border:2px solid var(--line); color:transparent; }
+  .comp-check.ok{ background:var(--good); border-color:var(--good); color:#fff; }
+  .comp-check.open{ border-color:var(--ipa); color:var(--ipa); font-weight:700; }
+  .comp-goto{ background:none; border:1px solid var(--line); border-radius:20px; padding:4px 10px; font-size:0.78rem; cursor:pointer; color:var(--ink); }
+  .comp-goto:hover{ border-color:var(--ipa); color:var(--ipa); }
+  .comp-note{ font-size:0.82rem; color:var(--ink-soft); margin:6px 0 16px; }
+
+  .matrix-entry{
+    background:var(--bg-card); border:1.5px solid var(--ipa); border-radius:var(--radius);
+    padding:16px 18px; margin:10px 0 8px; display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; gap:12px; width:100%; text-align:left;
+  }
+  .matrix-entry:hover{ background:var(--ipa-tint); }
+  .matrix-entry .ttitle{ font-weight:700; font-size:1rem; color:var(--ipa); }
+  .matrix-entry .tmeta{ font-size:0.85rem; color:var(--ink-soft); }
+  .matrix-entry .arrow{ font-size:1.3rem; color:var(--ipa); flex:none; }
+
+  .matrix-scroll{ overflow-x:auto; margin-bottom:8px; -webkit-overflow-scrolling:touch; }
+  .matrix-table{ border-collapse:collapse; font-size:0.82rem; min-width:640px; width:100%; }
+  .matrix-table th{ text-align:center; padding:8px 6px; border-bottom:2px solid var(--line); font-size:0.72rem; color:var(--ink-soft); font-weight:600; vertical-align:bottom; }
+  .matrix-table th.rowhead{ text-align:left; }
+  .matrix-table td{ padding:7px 6px; border-bottom:1px solid var(--line); text-align:center; }
+  .matrix-table td.rowhead{ text-align:left; }
+  .matrix-hkb-row td{ background:var(--teal-tint); font-weight:600; color:var(--teal-dark); padding:6px 10px; font-size:0.8rem; }
+  .matrix-code{ font-weight:700; color:var(--ipa); white-space:nowrap; }
+  .matrix-label{ font-size:0.8rem; color:var(--ink); }
+  .cell-ok{ display:inline-flex; width:22px; height:22px; border-radius:50%; background:var(--good); color:#fff; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; }
+  .cell-gap{ display:inline-flex; width:22px; height:22px; border-radius:50%; background:var(--gentle-tint); color:var(--gentle); align-items:center; justify-content:center; font-size:0.75rem; }
+  .matrix-total-row td{ font-weight:700; border-top:2px solid var(--line); border-bottom:none; }
+  .matrix-legend{ display:flex; gap:16px; flex-wrap:wrap; font-size:0.8rem; color:var(--ink-soft); margin:8px 0 18px; }
+  .matrix-legend span{ display:inline-flex; align-items:center; gap:6px; }
+
+  .topic-title{ font-size:1.35rem; margin:0 0 14px; }
+
+  .explain-card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:18px;
+  }
+  .explain-card ul{ margin:8px 0 0; padding-left:20px; }
+  .explain-card li{ margin-bottom:6px; }
+  .explain-card p{ margin:0 0 8px; }
+
+  .startbtn, .primary-btn{
+    background:var(--teal); color:#fff; border:none; border-radius:10px; padding:12px 20px;
+    font-size:0.95rem; font-weight:600; cursor:pointer;
+  }
+  .startbtn:hover, .primary-btn:hover{ background:var(--teal-dark); }
+  .ghost-btn{
+    background:none; border:1px solid var(--line); border-radius:10px; padding:11px 18px;
+    font-size:0.9rem; font-weight:500; cursor:pointer; color:var(--ink);
+  }
+  .ghost-btn:hover{ border-color:var(--teal); }
+
+  .qwrap{ background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; }
+  .qprogress{ font-size:0.8rem; color:var(--ink-soft); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  .qtype-tag{
+    display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:600;
+    background:var(--teal-tint); color:var(--teal-dark); padding:4px 10px; border-radius:20px; margin-bottom:12px;
+  }
+  .qprompt{ font-size:1.02rem; font-weight:500; margin-bottom:16px; }
+  .qcontext{ font-size:0.88rem; color:var(--ink-soft); margin-bottom:10px; font-style:italic; }
+
+  .options{ display:flex; flex-direction:column; gap:8px; }
+  .opt{
+    text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:10px;
+    padding:12px 14px; cursor:pointer; font-size:0.94rem; color:var(--ink); width:100%;
+  }
+  .opt:hover{ border-color:var(--teal); }
+  .opt.correct{ border-color:var(--good); background:var(--good-tint); }
+  .opt.wrong{ border-color:var(--gentle); background:var(--gentle-tint); }
+  .opt[disabled]{ cursor:default; }
+
+  .tfbtns{ display:flex; gap:10px; }
+  .tfbtns button{
+    flex:1; padding:14px; border-radius:10px; border:1.5px solid var(--line); background:#fff;
+    font-size:0.95rem; font-weight:600; cursor:pointer;
+  }
+  .tfbtns button:hover{ border-color:var(--teal); }
+  .tfbtns button.correct{ border-color:var(--good); background:var(--good-tint); }
+  .tfbtns button.wrong{ border-color:var(--gentle); background:var(--gentle-tint); }
+
+  .multitf-row{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+  .multitf-statement{ font-size:0.92rem; margin-bottom:10px; line-height:1.5; }
+  .multitf-row .tfbtns button{ padding:10px; font-size:0.88rem; }
+  .multitf-reason{ margin-top:10px; font-size:0.85rem; color:var(--ink); background:var(--bg); border-radius:8px; padding:9px 11px; line-height:1.5; }
+  .multitf-progress{ font-size:0.8rem; color:var(--ink-soft); margin-bottom:12px; }
+
+  .feedback{
+    margin-top:16px; padding:14px 16px; border-radius:10px; font-size:0.92rem;
+  }
+  .feedback.good{ background:var(--good-tint); color:var(--teal-dark); }
+  .feedback.gentle{ background:var(--gentle-tint); color:#7A362F; }
+  .feedback strong{ display:block; margin-bottom:4px; }
+
+  textarea{
+    width:100%; min-height:90px; border:1.5px solid var(--line); border-radius:10px; padding:12px;
+    font-family:inherit; font-size:0.94rem; resize:vertical;
+  }
+  textarea:focus{ outline:2px solid var(--teal); border-color:var(--teal); }
+
+  .modelanswer{
+    margin-top:12px; background:var(--teal-tint); border-radius:10px; padding:14px 16px; font-size:0.92rem;
+  }
+  .modelanswer strong{ display:block; margin-bottom:4px; color:var(--teal-dark); }
+
+  .selfrate{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  .selfrate button{
+    border-radius:10px; padding:10px 14px; font-size:0.88rem; font-weight:600; cursor:pointer; border:1.5px solid var(--line); background:#fff;
+  }
+  .selfrate button.active-good{ border-color:var(--good); background:var(--good-tint); color:var(--teal-dark); }
+  .selfrate button.active-practice{ border-color:var(--b); background:var(--b-tint); color:var(--b); }
+
+  .qnav{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; }
+
+  .done-screen{ text-align:center; padding:40px 20px; }
+  .done-screen .big-check{
+    width:64px; height:64px; border-radius:50%; background:var(--good-tint); color:var(--teal-dark);
+    display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 16px;
+  }
+
+  .zuordnen-row{ display:flex; gap:10px; margin-top:4px; }
+
+  .matchmulti-row{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
+  .matchmulti-statement{ font-size:0.92rem; margin-bottom:10px; line-height:1.5; }
+  .matchmulti-options{ display:flex; flex-wrap:wrap; gap:8px; }
+  .matchmulti-options button{ padding:8px 12px; border-radius:20px; border:1.5px solid var(--line); background:#fff; font-size:0.83rem; cursor:pointer; }
+  .matchmulti-options button:hover{ border-color:var(--teal); }
+  .matchmulti-options button.correct{ border-color:var(--good); background:var(--good-tint); font-weight:600; }
+  .matchmulti-options button.wrong{ border-color:var(--gentle); background:var(--gentle-tint); }
+  .zuordnen-row button{ flex:1; }
+
+  footer.foot{ text-align:center; color:var(--ink-soft); font-size:0.8rem; padding:30px 20px 10px; }
+
+  .kicker{ font-size:0.85rem; color:var(--ink-soft); margin-bottom:2px; }
+
+  ::selection{ background:var(--teal-tint); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="inner" id="headerInner">
+    <h1>AGS Prüfungs-Kern</h1>
+    <p>Ruhig üben, Thema für Thema. Alles, was oft dran kommt, zuerst.</p>
+    <div class="overall-progress"><div id="overallBar" style="width:0%"></div></div>
+    <div class="overall-note" id="overallNote">0 von 0 Themen geübt</div>
+  </div>
+</header>
+
+<div class="wrap" id="app"></div>
+
+<footer class="foot">Lernhilfe auf Basis des Bildungsplans AGS EBA und früherer Übungsprüfungen (OdA Gesundheit Zürich). Dein Fortschritt wird nur in diesem Browser-Fenster gemerkt.</footer>
+
+<script>
+/* ---------------------------------------------------------
+   DATA
+--------------------------------------------------------- */
+
+const PRIORITY_INFO = {
+  A: {label:'A – Muss sitzen', desc:'Kommt sehr oft vor, in mehreren Prüfungsteilen. Diese Themen zuerst lernen.'},
+  B: {label:'B – Sehr wahrscheinlich', desc:'Kommt häufig vor. Gut vorbereiten, wenn A sitzt.'},
+  C: {label:'C – Ergänzungswissen', desc:'Kann vorkommen, ist aber nicht der Schwerpunkt.'}
+};
+
+// Question type helpers
+// mc          -> {type:'mc', context, prompt, options:[...], correct:index, explain}
+// tf          -> {type:'tf', context, prompt, correct:true/false, explainTrue, explainFalse, correction}
+// beob        -> {type:'beob', context, statement, correct:'beobachtung'|'interpretation', explain}
+// frei        -> {type:'frei', context, prompt, model}
+
+const topicsA = [
+  {
+    id:'hygiene', priority:'A', title:'Hygiene, Reinigung & Desinfektion', transComp:'4.2',
+    intro:[
+      'Reinigen entfernt sichtbaren Schmutz. Desinfizieren tötet Keime ab – aber nie alle.',
+      'Reihenfolge: zuerst reinigen, dann desinfizieren. Schmutz schützt Keime vor dem Desinfektionsmittel.',
+      'Hände desinfizieren: vor und nach jedem Klientenkontakt, vor sauberen Arbeiten, nach unreinen Arbeiten.'
+    ],
+    questions:[
+      {type:'tf', context:'Eine Aussage zur Händedesinfektion.', prompt:'„Bei der Händedesinfektion werden alle Keime abgetötet.“ – Ist das richtig?',
+        correct:false, correction:'Richtig wäre: Die Händedesinfektion reduziert die Keimzahl stark, aber nicht auf null.',
+        explainFalse:'Genau – kein Desinfektionsmittel tötet wirklich alle Keime ab.', explainTrue:''},
+      {type:'mc', context:'', prompt:'Wann ist Händedesinfektion besonders wichtig?',
+        options:['Nur wenn die Hände sichtbar schmutzig sind','Vor und nach jedem Klientenkontakt','Nur einmal am Anfang der Schicht','Nur nach dem Mittagessen'],
+        correct:1, explain:'Vor und nach jedem Kontakt schützt sowohl die Klientin/den Klienten als auch dich selbst.'},
+      {type:'frei', context:'', prompt:'Warum reinigst du eine Fläche immer zuerst, bevor du sie desinfizierst? Begründe in einem Satz.',
+        model:'Weil Schmutz das Desinfektionsmittel daran hindert, die Keime zu erreichen – Reinigen entfernt zuerst die Grundlage, auf der Keime sitzen.'},
+      {type:'frei', context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie nennen drei Grundsätze der Hygiene bei der Intimpflege (z. B. von vorne nach hinten waschen, Einwegwaschlappen, Handschuhe).', prompt:'Begründe: Warum setzt du diese Hygiene-Grundsätze um?',
+        model:'Laut offizieller Musterlösung: um eine Keimverschleppung zu verhindern.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Nach dem Frühstück reinigst und desinfizierst du den Nachttisch.', prompt:'Beschreibe drei Handlungen, die du dabei ausführst.',
+        model:'Laut offizieller Musterlösung: Handschuhe anziehen, die Gegenstände vom Nachttisch entfernen, den Nachttisch desinfizieren und die Gegenstände danach wieder zurücklegen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Du reflektierst deine Händehygiene beim heutigen Einsatz.', prompt:'Nenne zwei Momente, in denen du dir während der Arbeit die Hände gewaschen oder desinfiziert hast.',
+        model:'Laut offizieller Musterlösung z. B.: vor der Zubereitung des Frühstücks, nach der Rückkehr vom Einkaufen, vor und nach dem Kontakt mit dem Klienten.'},
+      {type:'multitf', context:'Quelle: QV 2017, Teil 1 (Herr Berger).', prompt:'Kreuze an, ob die Behauptung richtig oder falsch ist.', labels:['Richtig','Falsch'],
+        rows:[
+          {statement:'Bei der Händedesinfektion werden alle Keime abgetötet.', correct:false, reason:'Die Keimzahl wird stark reduziert, aber nie auf null.'},
+          {statement:'Im Lavabo gibt es sehr viele Keime.', correct:true, reason:'Feuchte Stellen wie das Lavabo sind ein idealer Nährboden für Keime.'},
+          {statement:'Feuchtigkeit und Wärme fördern die Entstehung von Keimen.', correct:true, reason:'Beides sind ideale Bedingungen für Keimwachstum.'},
+          {statement:'Es spielt keine Rolle, ob zuerst gereinigt oder desinfiziert wird.', correct:false, reason:'Immer zuerst reinigen, dann desinfizieren – sonst schützt Schmutz die Keime.'}
+        ]}
+    ]
+  },
+  {
+    id:'koerperpflege', priority:'A', title:'Körperpflege', comp:'1.3',
+    intro:[
+      'Immer zuerst informieren, dann Intimsphäre sichern (Tür/Vorhang, Fenster zu).',
+      'Reihenfolge beachten: sauberer vor unreinem Bereich, z. B. Gesicht vor Intimbereich.',
+      'Wassertemperatur immer vor dem Waschen prüfen – am eigenen Handgelenk oder mit Thermometer.',
+      'Ressourcen der Klientin/des Klienten einbeziehen: Was kann sie/er noch selbst?'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Du pflegst die Füsse von Herrn Berger.', prompt:'Beschreibe drei Arbeitsschritte in Ich-Form. Beispiel: „Ich informiere Herrn Berger über das Vorgehen.“',
+        model:'Zum Beispiel: „Ich prüfe die Wassertemperatur.“ – „Ich wasche und trockne die Füsse gründlich, auch zwischen den Zehen.“ – „Ich beobachte die Haut auf Rötungen oder Verletzungen und melde Auffälliges weiter.“'},
+      {type:'mc', level:2, context:'', prompt:'Welcher Grundsatz stimmt für die Ganzkörperpflege?',
+        options:['Zuerst den Intimbereich waschen, dann das Gesicht','Zuerst das Gesicht waschen, dann den Intimbereich','Die Reihenfolge spielt keine Rolle','Immer mit dem Rücken beginnen'],
+        correct:1, explain:'Sauberer Bereich zuerst, unreiner Bereich zuletzt – das schützt vor Keimübertragung.'},
+      {type:'tf', level:2, context:'', prompt:'„Ich prüfe die Wassertemperatur, bevor ich mit dem Waschen beginne.“ – Ist das richtig so?',
+        correct:true, explainTrue:'Genau – so vermeidest du, dass es der Klientin/dem Klienten zu heiss oder zu kalt wird.'},
+      {type:'frei', level:1, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Sie führen die Hautkontrolle durch.', prompt:'Worauf achtest du bei der Hautkontrolle? Nenne zwei Punkte.',
+        model:'Laut offizieller Musterlösung: Hautfarbe/Rötungen, Feuchtigkeit oder Trockenheit, Verletzungen oder Druckstellen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Du informierst ihn über die bevorstehende Körperpflege.', prompt:'Nenne vier Massnahmen, um seine Privatsphäre zu schützen.',
+        model:'Laut offizieller Musterlösung: Türe schliessen, Anwesenheitslicht einschalten, Vorhänge ziehen, einen Paravent aufstellen, ein «Bitte nicht stören»-Schild anbringen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Du unterstützt ihn bei der Körperpflege am Lavabo und bei der Rasur.', prompt:'Wie förderst du dabei seine Ressourcen? Beschreibe zwei Handlungen.',
+        model:'Laut offizieller Musterlösung: ihn selbst Gesicht und Oberkörper waschen lassen und nur den Rücken übernehmen, ihn beim Aufstehen unterstützen, aber den Intimbereich selbstständig waschen lassen, ihm den Rasierer geben und ihn selbst rasieren lassen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Du führst die Körperpflege im Bett durch.', prompt:'Nenne zu den drei Grundsätzen Kommunikation, Sicherheit und Wahrung der Intimsphäre je eine passende Handlung.',
+        model:'Laut offizieller Musterlösung: Kommunikation – auf verbale und nonverbale Äusserungen achten; Sicherheit – sie nicht allein lassen, ohne das Bett zu senken/Bettgitter anzubringen; Intimsphäre – Türe schliessen, Vorhänge zuziehen, nur so weit nötig abdecken.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti, Spitex). Du betrittst seine Wohnung, er trägt bereits seine Hörgeräte.', prompt:'Was bereitest du für die Körperpflege vor, bevor du beginnst?',
+        model:'Laut offizieller Musterlösung: kontrollieren, dass die Hörgeräte vor dem Waschen entfernt werden, ihn beim Ablegen der Hörgeräte unterstützen, ihm beim Entkleiden helfen, eine rutschfeste Unterlage bereitlegen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Er sagt dir, dass seine Hörgeräte nicht richtig funktionieren.', prompt:'Was machst du? Beschreibe zwei Handlungen.',
+        model:'Laut offizieller Musterlösung: überprüfen, ob das Hörgerät richtig eingesetzt ist, die Batterien kontrollieren und wenn nötig ersetzen, kontrollieren, ob das Ohrpassstück richtig zusammengesetzt ist.'},
+      {type:'multitf', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Du unterstützt ihn beim Duschen.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich übernehme alle Duschhandlungen, damit es schneller geht.', correct:false, reason:'Das schwächt seine Ressourcen und Selbstständigkeit.'},
+          {statement:'Ich lasse Herrn Rossi mithelfen und kommentiere meine Arbeitsschritte.', correct:true, reason:'Das fördert seine Selbstständigkeit, sein Selbstwertgefühl und seine Ressourcen (offizielle Musterlösung).'}
+        ]},
+      {type:'multitf', level:2, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Nach dem Frühstück reinigst du seine Zahnprothese.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich reinige die Zahnprothese mit heissem Wasser.', correct:false, reason:'Heisses Wasser kann die Prothese verformen – lauwarmes Wasser verwenden.'},
+          {statement:'Ich ziehe für die Reinigung Handschuhe an.', correct:true, reason:'Das schützt vor Kontakt mit Körperflüssigkeiten.'},
+          {statement:'Herr Berger muss den Mund nicht spülen.', correct:false, reason:'Der Mund sollte nach dem Herausnehmen der Prothese gespült werden.'},
+          {statement:'Ich lege die Zahnprothese ins Lavabo.', correct:false, reason:'Besser in eine Schale legen, damit sie nicht zerbricht, falls sie herunterfällt.'}
+        ]},
+      {type:'frei', level:4, context:'', prompt:'Bei der Ganzkörperpflege wäschst du zuerst das Gesicht, dann den Intimbereich. Begründe diese Reihenfolge.',
+        model:'Weil der sauberere Bereich zuerst gewaschen wird und der unreine Bereich zuletzt – das schützt vor Keimübertragung von einem Bereich zum anderen.'},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum du die Wassertemperatur immer prüfst, bevor du mit dem Waschen beginnst.',
+        model:'Damit es der Klientin/dem Klienten nicht zu heiss oder zu kalt wird – zu heisses Wasser kann die Haut verbrühen, zu kaltes ist unangenehm und unprofessionell.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst nach der Körperpflege von Herrn Steiner.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Herr Steiner hat sich heute besonders unkooperativ gezeigt.','Herr Steiner hat Gesicht und Oberkörper selbstständig gewaschen.','Herr Steiner wollte offensichtlich nicht mitmachen.','Die Pflege verlief wie üblich.'],
+        correct:1, explain:'Nur diese Aussage ist eine konkrete, nachvollziehbare Beobachtung. Die anderen sind Deutungen ("unkooperativ", "wollte nicht") oder zu unpräzise ("wie üblich").'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Herr Steiner klagt während der Körperpflege über starke Rückenschmerzen, die er vorher nicht hatte.', prompt:'Was tust du? Darfst du die Ursache selbst einschätzen?',
+        model:'Nein – ich unterbreche behutsam, beobachte und melde die neue Beschwerde sofort der zuständigen Fachperson. Die medizinische Einschätzung der Ursache liegt ausserhalb meiner Kompetenz als AGS.'}
+    ]
+  },
+  {
+    id:'intimsphaere', priority:'A', title:'Intimsphäre & Privatsphäre',
+    intro:[
+      'Vor jedem Betreten des Zimmers anklopfen.',
+      'Tür schliessen, Vorhang ziehen, Fenster schliessen – bevor die Pflege beginnt.',
+      'Klientin/Klienten so wenig wie nötig entblössen, mit Tuch zudecken.',
+      'Über jeden Schritt informieren, auch wenn die Person nicht antwortet.'
+    ],
+    questions:[
+      {type:'frei', context:'', prompt:'Nenne vier Massnahmen, mit denen du die Privatsphäre bei der Körperpflege schützt.',
+        model:'Zum Beispiel: Tür schliessen · Vorhang zuziehen · Fenster schliessen · nur den Körperteil entblössen, der gerade gewaschen wird, und den Rest zudecken.'},
+      {type:'mc', context:'', prompt:'Was gehört NICHT zum Schutz der Intimsphäre?',
+        options:['Anklopfen vor dem Betreten','Die Tür während der Pflege offen lassen, damit man schneller Hilfe holen kann','Vorhang zuziehen','Nur den gerade zu pflegenden Bereich entblössen'],
+        correct:1, explain:'Die Tür bleibt geschlossen. Hilfe holt man über Rufanlage/Klingel, nicht über eine offene Tür.'},
+      {type:'beob', context:'Ordne zu: Ist das eine Beobachtung oder eine Interpretation?', statement:'„Frau Arnold wollte nicht, dass ich ihr Gesicht abtrockne.“',
+        correct:'beobachtung', explain:'Das ist eine Beobachtung: eine geäusserte, konkrete Aussage/Handlung der Klientin, kein Deuten.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie lebt in einem Zweibettzimmer, du planst die Intimpflege im Bett.', prompt:'Wie schützt du ihre Intimsphäre, bevor du mit der Pflege beginnst? Nenne vier Massnahmen.',
+        model:'Laut offizieller Musterlösung: die Türe schliessen, die Vorhänge ziehen, einen Paravent aufstellen, sie nur so weit wie nötig abdecken, sie informieren bevor sie abgedeckt wird, sie um Erlaubnis bitten, das Präsenzlicht einschalten.'}
+    ]
+  },
+  {
+    id:'mobilisation', priority:'A', title:'Mobilisation, Lagerung & Transfer', comp:'1.5',
+    intro:[
+      'Vor jeder Mobilisation: Hilfsmittel bereitstellen und auf Funktionstüchtigkeit prüfen (z. B. Bremsen).',
+      'Immer ankündigen, was passiert, und nach dem sicheren Sitzen fragen.',
+      'Rücken schonend arbeiten: nah am Körper, mit den Beinen statt dem Rücken heben.',
+      'Rutschbrett, Patientenheber und Rollstuhl richtig positionieren, bevor der Transfer beginnt.'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Du begleitest jemanden mit dem Rollator.', prompt:'Was kontrollierst du, bevor die Person den Rollator benutzt? Nenne zwei Punkte.',
+        model:'Zum Beispiel: Bremsen funktionsfähig? · Höhe richtig eingestellt? · Reifen/Rollen in Ordnung? · Sitzt die Person sicher, bevor sie losgeht?'},
+      {type:'mc', level:3, context:'', prompt:'Was ist beim Transfer mit dem Rutschbrett zuerst zu tun?',
+        options:['Sofort mit dem Transfer beginnen','Rollstuhl und Bett in die richtige Position bringen, dann erst transferieren','Die Armlehne erst nach dem Transfer entfernen','Die Person allein transferieren lassen'],
+        correct:1, explain:'Erst die Position von Rollstuhl/Bett und Hilfsmitteln sichern, dann erst den Transfer durchführen.'},
+      {type:'tf', level:2, context:'', prompt:'„Ich frage die Klientin, ob sie sicher sitzt, bevor ich weitermache.“ – Richtig so?',
+        correct:true, explainTrue:'Ja, das gibt Sicherheit und du erkennst sofort, wenn etwas nicht stimmt.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Du leitest ihn beim Aufsetzen an den Bettrand an.', prompt:'Nenne drei Anweisungen, die du ihm gibst.',
+        model:'Laut offizieller Musterlösung: „Drehen Sie sich auf die Seite.“ – „Ziehen Sie die Beine an.“ – „Lassen Sie die Beine langsam über den Bettrand gleiten.“ – „Stützen Sie sich mit der Hand ab und setzen Sie sich langsam auf.“'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Du unterstützt ihn bei der Mobilisation an Gehstöcken.', prompt:'Welche Grundsätze beachtest du? Nenne zwei.',
+        model:'Laut offizieller Musterlösung: die Höhe der Gehstöcke ist seiner Grösse angepasst, die rutschfeste Gummiabdeckung ist vorhanden, auf Stolperfallen achten, beide Gehstöcke werden benutzt.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Du planst, ihn beim Aufstehen zu unterstützen.', prompt:'Welche Vorbereitung der Umgebung triffst du? Beschreibe zwei Handlungen.',
+        model:'Laut offizieller Musterlösung: den Nachttisch wegschieben, die Gehstöcke in Griffweite legen, Gegenstände am Boden entfernen, die Betthöhe seiner Grösse anpassen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Du begleitest sie zum Frühstück in den Speisesaal.', prompt:'Auf welcher Seite begleitest du sie beim Gehen?',
+        model:'Laut offizieller Musterlösung: auf der linken bzw. betroffenen/gelähmten Seite – so kannst du sie am besten stützen.'},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum beim Transfer mit dem Rutschbrett zuerst Rollstuhl und Bett richtig positioniert werden, bevor der Transfer beginnt.',
+        model:'Damit der Transfer sicher und kontrolliert abläuft – eine falsche Position von Rollstuhl oder Bett erhöht das Sturz- und Verletzungsrisiko für die Klientin/den Klienten und für dich.'},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum du eine Klientin fragst, ob sie sicher sitzt, bevor du mit einer Handlung weitermachst.',
+        model:'Damit du sofort merkst, wenn etwas nicht stimmt, und die Sicherheit der Klientin/des Klienten jederzeit gewährleistet ist.'},
+      {type:'beob', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Beobachtung vs. Interpretation"). Ordne zu:', statement:'„Herr Lang konnte sich heute nur mit deutlich mehr Unterstützung an den Bettrand setzen als gestern.“',
+        correct:'beobachtung', explain:'Das ist eine konkrete, nachvollziehbare Feststellung zum Kraft-/Unterstützungsbedarf – keine Deutung.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst nach der Mobilisation von Herrn Lang.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Herr Lang hatte heute keine Lust, sich zu bewegen.','Herr Lang konnte sich mit Unterstützung an den Bettrand setzen.','Die Mobilisation war heute schwierig.','Herr Lang ist besonders schwach.'],
+        correct:1, explain:'Nur diese Aussage ist eine konkrete Beobachtung. Die anderen sind Deutungen ("keine Lust", "schwach") oder zu unpräzise ("schwierig").'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Beim Mobilisieren wird Herrn Lang plötzlich schwindlig, er wird blass.', prompt:'Was tust du? Darfst du selbst beurteilen, was die Ursache ist?',
+        model:'Nein – ich sichere ihn sofort ab, breche die Mobilisation ab und informiere unverzüglich die zuständige Fachperson. Eine medizinische Einschätzung liegt nicht in meiner Kompetenz.'}
+    ]
+  },
+  {
+    id:'sicherheit', priority:'A', title:'Sicherheit & Sturzprävention',
+    intro:[
+      'Stolperfallen erkennen: lose Teppiche, Kabel, nasse Böden, schlechte Beleuchtung.',
+      'Rutschfeste Hilfsmittel anbieten, statt einfach Gewohntes wegzunehmen – Wünsche der Klientin/des Klienten respektieren.',
+      'Bei aussergewöhnlichen Situationen: ruhig bleiben, Alarm auslösen, Hilfe holen.'
+    ],
+    questions:[
+      {type:'frei', context:'', prompt:'Nenne zwei Massnahmen, um Sturzrisiken im Haushalt zu verringern.',
+        model:'Zum Beispiel: lose Teppiche entfernen oder mit rutschfester Matte sichern · Kabel nicht im Weg verlegen · gute Beleuchtung sicherstellen · Wege freihalten.'},
+      {type:'mc', context:'Eine Klientin badet mit dem Badelift. Plötzlich wird sie blass, schläfrig und reagiert nicht mehr.', prompt:'Was tust du zuerst?',
+        options:['Erst zu Ende waschen, dann Hilfe holen','Alarm auslösen und Kopf der Person stützen','Die Klientin allein lassen und Kollegin suchen','Abwarten, ob es besser wird'],
+        correct:1, explain:'In einer Notfallsituation sofort Alarm auslösen und die Person sichern – nicht abwarten.'},
+      {type:'tf', context:'', prompt:'„Ein loser Teppich darf bleiben, solange die Klientin ihn mag.“ – Richtig so?',
+        correct:false, correction:'Richtig wäre: Sturzrisiken ansprechen und gemeinsam eine sichere Lösung suchen, z. B. rutschfeste Unterlage – die Wünsche der Klientin dabei ernst nehmen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Du stellst fest, dass sie rote Beeren von einem Strauch isst.', prompt:'Beschreibe zwei Sofortmassnahmen, die du triffst.',
+        model:'Laut offizieller Musterlösung: sie auffordern, die Beeren auszuspucken; sofort zurück auf die Wohngruppe begleiten; die zuständige Fachperson anrufen; ihren Zustand beobachten.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Beim Mittagessen klopft er mit dem Löffel auf den Tisch und ruft unverständliche Worte.', prompt:'Wie reagierst du? Beschreibe zwei Massnahmen.',
+        model:'Laut offizieller Musterlösung: ruhig bleiben, mit ihm sprechen und auf ihn eingehen, nach seinen Bedürfnissen fragen, bei Bedarf Hilfe holen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Bei der Zimmerreinigung fällt eine Blumenvase zu Boden und zerbricht. Sie trägt keine Schuhe.', prompt:'Welche Massnahmen zur Sicherheit triffst du? Beschreibe zwei.',
+        model:'Laut offizieller Musterlösung: die Scherben nicht mit der Hand, sondern mit Kehrblech und Bürste aufnehmen, sie von der Stelle wegführen, bis der Boden sicher ist.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Er ruft plötzlich: „Mich hat eine Biene in den Arm gestochen.“ Er hat keine bekannte Allergie.', prompt:'Nenne zwei Sofortmassnahmen.',
+        model:'Laut offizieller Musterlösung: den Stachel entfernen, die Einstichstelle desinfizieren, die Stelle mit kaltem Wasser oder einem Eisbeutel kühlen.'}
+    ]
+  },
+  {
+    id:'beobachtung', priority:'A', title:'Beobachtung',
+    intro:[
+      'Beobachtung = was du siehst, hörst oder misst. Objektiv, ohne Wertung. Beispiel: „Die Haut am linken Fuss ist gerötet.“',
+      'Interpretation = deine Deutung oder Meinung dazu. Beispiel: „Herr Berger hatte keine Lust.“',
+      'In der Dokumentation gehört immer die Beobachtung hin, nicht die Interpretation.',
+      'Wichtig, damit andere Fachpersonen selbst einschätzen können, was passiert ist.'
+    ],
+    questions:[
+      {type:'beob', context:'Ordne zu: Beobachtung oder Interpretation?', statement:'„Herr Berger hatte keine Lust, bei der Aktivierung mitzumachen.“',
+        correct:'interpretation', explain:'Das ist eine Deutung. Beobachtung wäre: „Herr Berger sagte, er wolle heute bei der Aktivierung nicht mitmachen.“'},
+      {type:'beob', context:'Ordne zu: Beobachtung oder Interpretation?', statement:'„Frau Haag hat heute zwei Kilogramm zugenommen.“',
+        correct:'beobachtung', explain:'Das ist ein gemessener Fakt – eine Beobachtung.'},
+      {type:'frei', context:'', prompt:'Forme die Interpretation „Herr Keller war heute schlecht gelaunt“ in eine reine Beobachtung um.',
+        model:'Zum Beispiel: „Herr Keller sprach heute wenig, seine Stirn war gerunzelt und er antwortete auf Fragen einsilbig.“ – Beschreibe, was du wahrgenommen hast, statt es zu deuten.'}
+    ]
+  },
+  {
+    id:'infoweitergabe', priority:'A', title:'Informationsweitergabe', transComp:'6.1',
+    intro:[
+      'Informationen kurz, sachlich und zeitnah weitergeben – an die richtige Fachperson.',
+      'Berufsgeheimnis beachten: Informationen nur an berechtigte Personen weitergeben.',
+      'Bei Unsicherheit: lieber einmal zu viel informieren als zu wenig.'
+    ],
+    questions:[
+      {type:'mc', context:'', prompt:'Wie leitest du eine wichtige Beobachtung am besten weiter?',
+        options:['Ausführlich, mit vielen persönlichen Vermutungen','Knapp, sachlich, zeitnah an die zuständige Fachperson','Erst am Ende der Schicht, wenn Zeit ist','Nur wenn jemand extra danach fragt'],
+        correct:1, explain:'Knapp, sachlich, zeitnah – das ist professionelle Informationsweitergabe.'},
+      {type:'tf', context:'', prompt:'„Ich darf Klienteninformationen mit meiner Familie besprechen, wenn ich niemanden beim Namen nenne.“ – Richtig?',
+        correct:false, correction:'Richtig wäre: Berufsgeheimnis gilt grundsätzlich – Informationen gehören nur ins Team bzw. an zuständige Fachpersonen, nicht in den privaten Kreis.'},
+      {type:'frei', level:5, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Sie liegt im Bett, wirkt traurig und schwach und möchte sich nicht waschen.', prompt:'Reicht es, der zuständigen Fachperson nur zu sagen „sie lässt sich nicht waschen“?',
+        model:'Laut offizieller Musterlösung reicht das nicht – das ist eine unvollständige Information. Richtig ist, den ganzen Gesundheitszustand zu beschreiben: dass sie traurig und schwach wirkt und die Pflege verweigert. So kann die Fachperson richtig einschätzen und entscheiden.'},
+      {type:'frei', level:5, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Sie bittet dich, eine Sterbehilfeorganisation zu kontaktieren.', prompt:'Was machst du mit dieser Information?',
+        model:'Laut offizieller Musterlösung: Du musst diesen Wunsch der zuständigen Fachperson melden – du entscheidest nicht selbst darüber.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Er will sich hinlegen und hat die Hörgeräte entfernt.', prompt:'Worauf achtest du, wenn du trotzdem mit ihm kommunizierst? Nenne zwei Punkte.',
+        model:'Laut offizieller Musterlösung: deutlich und langsam sprechen, nonverbal kommunizieren/Gebärden nutzen, Blickkontakt halten und sich auf seine Augenhöhe begeben.'},
+      {type:'frei', level:5, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Auf dem Weg begegnet dir ihre Nachbarin und fragt: „Für wen war das Rotkreuz-Fahrzeug, das ich vorher gesehen habe?“', prompt:'Was antwortest du ihr?',
+        model:'Laut offizieller Musterlösung: „Es tut mir leid, aber diese Frage darf ich Ihnen nicht beantworten.“ – Berufsgeheimnis gilt auch gegenüber Nachbarinnen.'},
+      {type:'frei', level:4, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Er trat vor zwei Tagen mit 80 kg ein, die Waage zeigt jetzt 82 kg.', prompt:'Du leitest diese Information an die zuständige Fachperson weiter. Begründe, warum das wichtig ist.',
+        model:'Laut offizieller Musterlösung: Es liegt in der Kompetenz der Fachperson, zu entscheiden, was weiter unternommen wird – sie kann Abklärungen treffen, bevor er noch mehr zunimmt.'},
+      {type:'frei', level:2, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Du verstehst oft nicht, was er sagt.', prompt:'Nenne vier Hilfsmittel für die Kommunikation mit ihm.',
+        model:'Laut offizieller Musterlösung: Piktogramme, Symbole, ein Sprachcomputer, Bilder, Aufschreiben, Handzeichen.'},
+      {type:'multitf', level:5, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Sie liegt im Bett, wirkt traurig und schwach und möchte sich nicht waschen.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich gehe zu Frau Grosjean, nehme ihre Hand und setze mich zu ihr.', correct:true, reason:'Ich gehe auf sie ein und verhalte mich empathisch (offizielle Musterlösung).'},
+          {statement:'Ich sage ihr, dass es mein Auftrag ist, sie zu waschen.', correct:false, reason:'Das ist unprofessionell – ich gehe nicht auf ihre Bedürfnisse ein (offizielle Musterlösung).'},
+          {statement:'Ich sage der zuständigen Fachperson nur, dass sich Frau Grosjean nicht waschen lässt.', correct:false, reason:'Diese Information ist unvollständig (offizielle Musterlösung).'},
+          {statement:'Ich beschreibe der zuständigen Fachperson den ganzen Gesundheitszustand von Frau Grosjean.', correct:true, reason:'Ich übernehme entsprechend meiner Funktion Verantwortung (offizielle Musterlösung).'}
+        ]},
+      {type:'multitf', level:5, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Der Hausarzt ruft an und will ein neues Medikament verordnen.', prompt:'Kreuze an, was du sagst oder nicht sagst.',
+        rows:[
+          {statement:'„Einen Augenblick, ich rufe die zuständige Fachperson.“', correct:true, reason:'Medikamentenverordnungen liegen ausserhalb deiner Kompetenz.'},
+          {statement:'„Einen Moment bitte, ich schreibe es auf.“', correct:false, reason:'Du darfst keine Verordnungen selbst entgegennehmen.'},
+          {statement:'„Danke, ich werde Frau Beuchat darüber informieren.“', correct:false, reason:'Das ist nicht deine Aufgabe, bevor die Fachperson informiert wurde.'},
+          {statement:'„Es tut mir leid, ich darf keine Verordnungen entgegennehmen.“', correct:true, reason:'Das entspricht genau deiner Kompetenz als AGS.'}
+        ]},
+      {type:'multitf', level:1, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Im Team werden nonverbale und verbale Kommunikationsformen besprochen.', prompt:'Kreuze an, welche Kommunikationsform passt.', labels:['nonverbal','verbal'],
+        rows:[
+          {statement:'Frau Stojanovic läuft in gebückter Körperhaltung.', correct:true, reason:'Körperhaltung ist nonverbale Kommunikation.'},
+          {statement:'Frau Stojanovic schimpft beim Verschütten des Kaffees.', correct:false, reason:'Schimpfen mit Worten ist verbale Kommunikation.'},
+          {statement:'Ich winke auf dem Spaziergang den anderen Bewohnerinnen zu.', correct:true, reason:'Eine Geste ist nonverbal.'},
+          {statement:'Frau Stojanovic verzieht das Gesicht beim Beerenessen.', correct:true, reason:'Mimik ist nonverbale Kommunikation.'},
+          {statement:'Ich schreibe einen Einkaufszettel.', correct:false, reason:'Geschriebene Sprache zählt zur verbalen Kommunikation.'},
+          {statement:'Ich informiere Frau Stojanovic über den bevorstehenden Zahnarzttermin.', correct:false, reason:'Gesprochene Sprache ist verbale Kommunikation.'}
+        ]}
+    ]
+  },
+  {
+    id:'dokumentation', priority:'A', title:'Dokumentation', transComp:'5.2',
+    intro:[
+      'Dokumentiere Beobachtungen, keine Interpretationen – siehe Thema „Beobachtung“.',
+      'Einträge sind konkret, sachlich, mit Datum/Zeit, und nachvollziehbar.',
+      'Auch das eigene Handeln wird dokumentiert (z. B. durchgeführte Massnahmen).'
+    ],
+    questions:[
+      {type:'tf', context:'Prüfe diesen Dokumentationseintrag.', prompt:'„Herr Berger hat gesagt, dass er schlecht geschlafen hat.“ – Ist dieser Eintrag korrekt formuliert?',
+        correct:true, explainTrue:'Ja – das ist eine wörtlich wiedergegebene, nachvollziehbare Aussage, keine Deutung.'},
+      {type:'tf', context:'Prüfe diesen Dokumentationseintrag.', prompt:'„Herr Berger hatte keine Lust, bei der Aktivierung mitzumachen.“ – Ist dieser Eintrag korrekt formuliert?',
+        correct:false, correction:'Richtig wäre: „Herr Berger sagte, er wolle heute nicht an der Aktivierung teilnehmen.“ – konkret und ohne Deutung.'},
+      {type:'frei', context:'', prompt:'Formuliere selbst einen korrekten Dokumentationseintrag zu: Eine Klientin hat beim Mittagessen nur die Hälfte gegessen.',
+        model:'Zum Beispiel: „Frau X hat beim Mittagessen die Hälfte der Portion gegessen. Auf Nachfrage sagte sie, sie sei nicht hungrig.“'},
+      {type:'mc', context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Du schreibst nach der Pflege die Dokumentation.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Frau Grosjean hat Angst vor dem Tod.','Frau Grosjean hat eine Hautveränderung festgestellt.','Frau Grosjean will heute nicht.','Frau Grosjean ist heute schwierig.'],
+        correct:1, explain:'Nur der Eintrag zur Hautveränderung ist eine reine, nachvollziehbare Beobachtung. Die anderen sind Deutungen oder zu unpräzise (offizielle Musterlösung).'},
+      {type:'frei', level:6, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Seine Tochter kann ihn erst um 17.15 Uhr abholen; du informierst die zuständige Fachperson.', prompt:'Was beachtest du bei der Weitergabe dieser Information? Nenne einen Grundsatz.',
+        model:'Laut offizieller Musterlösung: die Information sachlich, korrekt und zeitnah weitergeben, ohne eigene Vermutungen hinzuzufügen.'},
+      {type:'multitf', level:6, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Sie kehrt mit einem neuen Zahnarzttermin zurück.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich schreibe den Termin im Übergabe-Ordner von Frau Rosenthal ein.', correct:true, reason:'So sehen ihn alle im Team.'},
+          {statement:'Ich trage den Termin in die Agenda der Pflegedokumentation ein.', correct:true, reason:'Termine gehören ins offizielle Dokumentationssystem.'},
+          {statement:'Ich lege den Zettel mit dem Termin ins Wohnzimmer.', correct:false, reason:'Ein loser Zettel kann verloren gehen und ist nicht Teil der offiziellen Dokumentation.'},
+          {statement:'Ich lege den Zettel mit dem Termin in die Pflegedokumentation.', correct:false, reason:'Der Termin gehört eingetragen, nicht als loser Zettel abgelegt.'}
+        ]},
+      {type:'frei', level:6, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Nach dem Einsatz gibst du deiner zuständigen Fachperson mündlich Rapport ab.', prompt:'Welche Informationen zum heutigen Morgen musst du erwähnen? Nenne vier.',
+        model:'Laut offizieller Musterlösung z. B.: Reinigungsmittel in falscher Flasche entdeckt, Bienenstich, Kaffeetasse zerbrochen, Hörgerät funktionierte nicht richtig, Kalendereintrag erstellt, allgemeiner Zustand von Herrn Cotti.'}
+    ]
+  },
+  {
+    id:'kommunikation', priority:'A', title:'Kommunikation', transComp:'2.6',
+    intro:[
+      'Professionell heisst: höflich, klar, in der Sie-Form, aktiv zuhörend.',
+      'Nonverbale Signale beachten (Mimik, Körperhaltung) – nicht nur auf Worte hören.',
+      'Nähe und Distanz bewusst regulieren; die Klientin/der Klient bleibt Mensch mit eigener Persönlichkeit.'
+    ],
+    questions:[
+      {type:'mc', context:'Eine Klientin erzählt, was sie gerne machen würde, und du hörst interessiert zu.', prompt:'Welche Haltung zeigst du damit vor allem?',
+        options:['Empathie und Wertschätzung','Ungeduld','Gleichgültigkeit','Strenge'],
+        correct:0, explain:'Interessiertes Zuhören zeigt Empathie und Wertschätzung gegenüber der Person.'},
+      {type:'frei', context:'', prompt:'Ein Klient möchte bei einer Aktivität nicht mitmachen. Wie reagierst du professionell? Formuliere einen Satz.',
+        model:'Zum Beispiel: „Das ist völlig in Ordnung, Sie müssen nicht mitmachen. Sagen Sie mir, falls Sie es sich anders überlegen.“ – Respektiert die Entscheidung, bleibt freundlich offen.'},
+      {type:'tf', context:'', prompt:'„Ich stehe direkt vor einer schwerhörigen Person, wenn ich mit ihr spreche.“ – Ist das sinnvoll?',
+        correct:true, explainTrue:'Ja – so kann die Person dein Gesicht und deine Lippen sehen, das erleichtert das Verstehen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Ein anspruchsvoller Einsatz beschäftigt dich noch nach der Arbeit.', prompt:'Was kannst du für dich selbst tun, um das zu verarbeiten? Nenne vier Massnahmen.',
+        model:'Laut offizieller Musterlösung: Sport treiben, dich gesund ernähren, bewusst Erholung/Entspannung einplanen, allein oder mit jemandem darüber nachdenken, dich im Team austauschen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Du erstattest deiner Vorgesetzten mündlich Bericht.', prompt:'Welche wichtigen Punkte musst du erwähnen? Nenne vier.',
+        model:'Laut offizieller Musterlösung z. B.: veränderte Beobachtungen, neue Termine, den psychischen Zustand der Klientin, geäusserte Wünsche – alles, was für die Weiterbetreuung relevant ist.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Am Ende des Tages merkst du, dass du dich gestresst fühlst.', prompt:'Was hilft dir, mit Stress umzugehen? Nenne drei Massnahmen.',
+        model:'Laut offizieller Musterlösung: Gefühle durch körperliche Aktivität abbauen, dich gesund ernähren, bewusst Erholung einplanen, die Situation reflektieren, mit einer Vertrauensperson darüber sprechen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Beschreibe zwei Möglichkeiten, wie du mit belastenden Situationen umgehst.',
+        model:'Laut offizieller Musterlösung: die Situation mit der zuständigen Fachperson reflektieren, Ausgleich mit Freizeitaktivitäten suchen, Tagebuch schreiben, mit Kolleginnen sprechen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Du betrittst sein Zimmer, er schläft noch.', prompt:'Wie weckst du ihn? Nenne zwei Massnahmen.',
+        model:'Laut offizieller Musterlösung: seine Gewohnheiten und Wünsche berücksichtigen, ihn leise mit „Guten Morgen“ ansprechen, Vorhänge öffnen statt ihn zu berühren oder anzuschreien.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Du begleitest sie zum Grab ihres verstorbenen Mannes, sie ist noch immer sehr traurig.', prompt:'Wie gehst du mit ihr in ihrem Trauerprozess um? Nenne zwei Punkte.',
+        model:'Laut offizieller Musterlösung: sie trösten, ihre Ratlosigkeit nicht ausnutzen, um sie von eigenen Ansichten zu überzeugen, mit ihr schweigen können, sie in ihrem Tempo begleiten.'},
+      {type:'frei', level:1, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie erzählt dir aus ihrer Lebensgeschichte.', prompt:'Welche Vorteile hat es für sie, wenn sie von sich erzählen kann? Nenne vier.',
+        model:'Laut offizieller Musterlösung: Selbstvertrauen stärken, Mut fassen, positive Erinnerungen wecken, dem Leben Sinn geben, die Gegenwart besser leben, der Zukunft gelassener entgegensehen.'},
+      {type:'frei', level:4, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Seine Tochter holt ihn ab, du verabschiedest dich von ihm.', prompt:'Was beachtest du dabei? Begründe dein Verhalten.',
+        model:'Laut offizieller Musterlösung: die Höflichkeitsregeln einhalten und ihn mit Namen ansprechen – damit fühlt er sich als Person wahrgenommen und respektiert.'},
+      {type:'frei', level:1, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Er sagt beim Einrichten des Zimmers: «Ich bin traurig.»', prompt:'Nenne einen möglichen Grund, weshalb er das sagt.',
+        model:'Laut offizieller Musterlösung: der Abschied von zu Hause, die Trennung von Vertrautem, die grosse Veränderung durch den Einzug.'},
+      {type:'matchmulti', level:1, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Er sagt dir, dass er bei der Aktivierung nicht mitmachen will.', prompt:'Ordne jedem Beispiel die passende Haltung zu.',
+        categories:['Hilfsbereitschaft','Empathie und Wertschätzung','Höflichkeit','Persönlichkeit respektieren'],
+        rows:[
+          {statement:'Ich spreche Herrn Berger in der Sie-Form an.', category:'Höflichkeit'},
+          {statement:'Ich frage nach, ob ich etwas für ihn tun kann.', category:'Hilfsbereitschaft'},
+          {statement:'Ich respektiere seine Entscheidung, bei der Aktivierung nicht mitzumachen.', category:'Persönlichkeit respektieren'},
+          {statement:'Ich höre interessiert zu, wenn er erzählt, was er gerne machen möchte.', category:'Empathie und Wertschätzung'}
+        ]}
+    ]
+  },
+  {
+    id:'ressourcen', priority:'A', title:'Ressourcen & Selbstständigkeit',
+    intro:[
+      'Zuerst schauen, was die Klientin/der Klient noch selbst kann – und das fördern.',
+      'Nicht alles übernehmen, auch wenn es schneller ginge.',
+      'Loben, wenn selbstständig etwas geschafft wird.'
+    ],
+    questions:[
+      {type:'mc', context:'Ein Klient kann sein Oberteil selbst anziehen, aber die Knöpfe nicht schliessen.', prompt:'Was ist die ressourcenorientierte Vorgehensweise?',
+        options:['Das ganze Anziehen für ihn übernehmen','Ihn selbst anziehen lassen und nur bei den Knöpfen helfen','Ihm sagen, er solle es später selbst versuchen','Die Knöpfe einfach offen lassen'],
+        correct:1, explain:'So bleibt die vorhandene Fähigkeit erhalten und nur die wirkliche Lücke wird unterstützt.'},
+      {type:'frei', context:'', prompt:'Nenne ein Beispiel, wie du im Alltag die Selbstständigkeit einer Klientin/eines Klienten förderst statt sie/ihn zu übernehmen.',
+        model:'Zum Beispiel: Beim Essen die grossen Stücke schon schneiden, aber die Klientin selbst essen lassen, statt sie zu füttern.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Ressourcen und Selbstbestimmung sind zwei wichtige Begriffe in der Arbeit mit ihr.', prompt:'Beschreibe zu beiden Begriffen je eine mögliche Handlung.',
+        model:'Laut offizieller Musterlösung: Ressourcen erhalten und fördern – ihre Stärken, Interessen und Fähigkeiten einbeziehen und sie ermutigen, etwas selbst zu tun; Selbstbestimmung ermöglichen – ihr echte Wahlmöglichkeiten anbieten und ihre Entscheidung respektieren.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Ihr geht gemeinsam im Dorfladen einkaufen.', prompt:'Wie beziehst du seine Ressourcen beim Einkaufen ein? Nenne vier Beispiele.',
+        model:'Laut offizieller Musterlösung: ihn das Gemüse wägen lassen, den Einkaufskorb halten lassen, ihn in Entscheidungen einbeziehen (z. B. Produktauswahl), mit ihm die Einkaufsliste überprüfen, seine Sinne einbeziehen (z. B. riechen am Brotstand), ihn bezahlen oder einpacken lassen.'}
+    ]
+  },
+  {
+    id:'ausscheidung', priority:'A', title:'Ausscheidung', comp:'1.2',
+    intro:[
+      'Immer zuerst Intimsphäre sichern, dann erst mit der Hilfestellung beginnen.',
+      'Schamgefühle ernst nehmen – bei sich selbst und bei der Klientin/dem Klienten.',
+      'Veränderungen bei Urin/Stuhl beobachten und weiterleiten.',
+      'Hände vor und nach dem Kontakt desinfizieren, Handschuhe verwenden.'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Du wechselst eine Inkontinenzeinlage.', prompt:'Wie nimmst du Rücksicht auf das Schamgefühl? Nenne vier Massnahmen.',
+        model:'Zum Beispiel: Tür schliessen · ruhig und respektvoll sprechen · nur so viel entblössen wie nötig · der Person Zeit geben und sie nach Möglichkeit einbeziehen.'},
+      {type:'mc', level:2, context:'', prompt:'Welches Organ produziert den Urin?', options:['Die Blase','Die Niere','Die Leber','Der Darm'], correct:1,
+        explain:'Die Nieren filtern das Blut und produzieren den Urin. Die Blase speichert ihn nur.'},
+      {type:'tf', level:2, context:'', prompt:'„Ich prüfe den Urin visuell und melde Auffälligkeiten weiter.“ – Richtig so?',
+        correct:true, explainTrue:'Ja – Veränderungen wie Farbe oder Trübung können wichtige Hinweise sein.'},
+      {type:'frei', level:5, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie hat seit drei Tagen keinen Stuhlgang mehr.', prompt:'Du informierst die zuständige Fachperson darüber. Warum tust du das?',
+        model:'Laut offizieller Musterlösung: weil länger anhaltende Verstopfung ein gesundheitliches Risiko sein kann und die Fachperson über weitere medizinische Massnahmen entscheidet – das liegt ausserhalb deiner Kompetenz als AGS.'},
+      {type:'frei', level:1, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Er neigt zu Verstopfung.', prompt:'Nenne zwei Merkmale, die auf eine Verstopfung hinweisen.',
+        model:'Laut offizieller Musterlösung: seltener oder harter Stuhlgang, Bauchschmerzen oder Blähungen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Du wechselst seine Inkontinenzeinlage.', prompt:'Wie nimmst du Rücksicht auf sein Schamgefühl? Nenne vier Massnahmen.',
+        model:'Laut offizieller Musterlösung: feinfühlig auf seine Bedürfnisse eingehen, die Intimsphäre wahren, keine unüberlegten Äusserungen machen, sein Selbstwertgefühl stärken, genügend Zeit einplanen, ihn wo möglich einbeziehen.'},
+      {type:'frei', level:2, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Sie beschriften das Harnsystem.', prompt:'Nenne zwei Funktionen der Niere.',
+        model:'Laut offizieller Musterlösung: Urin produzieren, Blut filtern, Urin konzentrieren, End- und Giftstoffe ausscheiden.'},
+      {type:'frei', level:1, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Du begleitest ihn nach dem Frühstück zur Toilette.', prompt:'Nach welchen Kriterien kontrollierst du Stuhl und Urin? Nenne je zwei.',
+        model:'Laut offizieller Musterlösung: beim Urin z. B. Menge, Häufigkeit, Konzentration, Farbe, Geruch; beim Stuhl entsprechend Menge, Farbe, Konsistenz, Häufigkeit.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Sie will Urin lösen und du gibst ihr den Topf.', prompt:'Worauf achtest du? Beschreibe drei Handlungen.',
+        model:'Laut offizieller Musterlösung: die Intimsphäre wahren, darauf achten, Kleider/Nachthemd nicht zu beschmutzen, die Bettwäsche mit einer Unterlage schützen, die Bettschüssel richtig positionieren.'},
+      {type:'matchmulti', level:2, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Du schützt sowohl seine Privatsphäre als auch seine Intimsphäre.', prompt:'Ordne jede Handlung dem passenden Begriff zu.',
+        categories:['Privatsphäre','Intimsphäre'],
+        rows:[
+          {statement:'Ich reiche Herrn Lang seine persönlichen Kleider.', category:'Privatsphäre'},
+          {statement:'Ich schliesse die Türe, wenn er auf der Toilette ist.', category:'Intimsphäre'},
+          {statement:'Ich decke beim Waschen die nackten Körperstellen zu.', category:'Intimsphäre'},
+          {statement:'Ich gehe aus dem Zimmer, wenn er mit seiner Tochter telefoniert.', category:'Privatsphäre'}
+        ]},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum du Urin visuell kontrollierst und Auffälligkeiten weiterleitest.',
+        model:'Weil Veränderungen wie Farbe oder Trübung wichtige Hinweise auf gesundheitliche Probleme sein können, die frühzeitig erkannt werden sollen.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst nach dem Toilettengang von Herrn Berger.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Herr Berger hatte heute wieder Mühe mit der Toilette.','Herr Berger hat heute normalen, braunen Stuhlgang.','Herr Berger war unwillig, zur Toilette zu gehen.','Herr Berger hat wie immer Probleme.'],
+        correct:1, explain:'Nur diese Aussage ist eine konkrete, nachprüfbare Beobachtung. Die anderen sind Deutungen ("unwillig") oder zu unpräzise ("wie immer Probleme").'}
+    ]
+  },
+  {
+    id:'fluessigkeit', priority:'A', title:'Flüssigkeit & Trinken',
+    intro:[
+      'Ausreichend Trinken ist besonders bei älteren Menschen wichtig – das Durstgefühl lässt im Alter nach.',
+      'Trinkbilanz führen, wenn dies angeordnet ist: genaue Menge dokumentieren.',
+      'Hilfsmittel anbieten (Schnabeltasse, Trinkhalm), wenn nötig.',
+      'Anzeichen von Flüssigkeitsmangel beobachten: trockene Haut/Lippen, Verwirrtheit, Schwäche.'
+    ],
+    questions:[
+      {type:'mc', context:'', prompt:'Warum ist das Führen einer Trinkbilanz wichtig?',
+        options:['Nur für die Statistik','Um Flüssigkeitsmangel oder Überwässerung rechtzeitig zu erkennen','Weil es Vorschrift ohne Nutzen ist','Sie ist nie wichtig'],
+        correct:1, explain:'Die Trinkbilanz hilft, gesundheitliche Probleme frühzeitig zu erkennen.'},
+      {type:'frei', context:'', prompt:'Nenne zwei Anzeichen dafür, dass jemand zu wenig getrunken hat.',
+        model:'Zum Beispiel: trockene Lippen/Haut · dunkler, konzentrierter Urin · Verwirrtheit · Müdigkeit/Schwäche.'},
+      {type:'frei', level:1, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Er trinkt wenig, ältere Menschen trinken oft zu wenig.', prompt:'Nenne eine Ursache, warum ältere Menschen häufig zu wenig trinken.',
+        model:'Laut offizieller Musterlösung: kein Durstgefühl, Nebenwirkung von Medikamenten, Verwirrtheit/Demenz, weniger Bewegung, oder um nicht zu häufig auf die Toilette zu müssen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi).', prompt:'Beschreibe drei Massnahmen, wie du ihn motivierst, mehr zu trinken.',
+        model:'Laut offizieller Musterlösung: darauf achten, dass er beim Essen mindestens ein Glas trinkt; ihm sein Lieblingsgetränk anbieten; ihn zum Trinken auffordern; mit ihm zusammen trinken; die empfohlene Menge sichtbar platzieren (Krug, Flasche); ein Hilfsmittel anbieten (Röhrchen, Schnabelbecher).'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Die zuständige Fachperson entscheidet, eine Trinkbilanz zu führen.', prompt:'Wie unterstützt du sie, mehr zu trinken? Beschreibe drei Massnahmen.',
+        model:'Laut offizieller Musterlösung: ihr regelmässig ein Getränk anbieten, darauf achten, dass sie während der Mahlzeiten trinkt, ihr eine Flasche Wasser oder Thermoskanne Tee bereitstellen, Lebensmittel mit hohem Wassergehalt anbieten, ihr Lieblingsgetränk anbieten.'},
+      {type:'frei', level:2, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie hat getrunken: eine Kanne Kaffee (2 dl), eine Kanne Milch (1 dl), ein Glas Orangensaft (1,5 dl), ein Glas Wasser (1 dl) bei der Medikamentenabgabe.', prompt:'Wie viel ml hat sie insgesamt getrunken? Trage die Summe in die Trinkbilanz ein.',
+        model:'550 ml (200 + 100 + 150 + 100 ml) – offizielle Musterlösung.'}
+    ]
+  },
+  {
+    id:'ergonomie', priority:'A', title:'Ergonomie & rückenschonendes Arbeiten', transComp:'4.1',
+    intro:[
+      'Nah am Körper arbeiten, mit den Beinen heben statt mit dem Rücken.',
+      'Hilfsmittel nutzen (Rutschbrett, Patientenheber) statt aus eigener Kraft zu heben.',
+      'Arbeitshöhe anpassen (z. B. Bett hochstellen), bevor du eine Pflegehandlung beginnst.'
+    ],
+    questions:[
+      {type:'mc', context:'', prompt:'Was gehört zur rückenschonenden Arbeitsweise?',
+        options:['Mit rundem Rücken und gestreckten Beinen heben','Nah am Körper arbeiten und Hilfsmittel einsetzen','Möglichst schnell und ohne Pause arbeiten','Immer allein heben, auch bei schweren Personen'],
+        correct:1, explain:'Nah am Körper und mit Hilfsmitteln arbeiten schont den Rücken am meisten.'},
+      {type:'frei', context:'', prompt:'Nenne eine konkrete Handlung aus deinem Arbeitsalltag, mit der du die rückenschonende Arbeitsweise einhältst.',
+        model:'Zum Beispiel: „Ich habe das Bett vor der Körperpflege auf Arbeitshöhe gestellt.“'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Du erhältst den Auftrag, Getränkekisten zu verräumen.', prompt:'Beschreibe zwei Grundsätze, wie du diese Lasten rückenschonend hebst.',
+        model:'Laut offizieller Musterlösung: den Rücken beim Heben immer gerade halten, für einen sicheren Stand sorgen, die Kiste möglichst nahe am Körper tragen, wenn möglich Hilfsmittel nutzen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Er sitzt auf dem Boden neben dem Bett und möchte zurück in den Rollstuhl.', prompt:'Nenne zwei Punkte der rückenschonenden Arbeitsweise beim Transfer.',
+        model:'Laut offizieller Musterlösung: Hilfe einer zweiten Pflegeperson anfordern, nach Kinästhetik-Prinzipien arbeiten, ihn beim Hochziehen am Bett unterstützen, Hilfsmittel einsetzen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Der eigene Gesundheitsschutz ist bei der Pflege wichtig.', prompt:'Nenne vier Punkte, wie du diesen im Alltag umsetzt.',
+        model:'Laut offizieller Musterlösung: Ergonomieregeln beachten (z. B. Bett auf Arbeitshöhe), Hygieneregeln einhalten (Handschuhe, Händedesinfektion), rutschfeste Schuhe tragen, für ausreichende Beleuchtung und einen organisierten Arbeitsplatz sorgen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Du unterstützt ihn bei der Mobilisation in den Duschraum.', prompt:'Welche Massnahmen triffst du, um rückenschonend zu arbeiten? Beschreibe zwei.',
+        model:'Laut offizieller Musterlösung: die Betthöhe seiner Körpergrösse anpassen, in die Knie gehen statt den Rücken zu beugen, Hilfsmittel einsetzen (z. B. Rutschbrett, Drehteller), nach Kinästhetik-Prinzipien arbeiten.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Beim Frühstück fällt eine volle Kaffeetasse auf den Boden und zerspringt.', prompt:'Wie gehst du beim Aufräumen rückenschonend und sicher vor?',
+        model:'Laut offizieller Musterlösung: die Scherben zuerst mit Handbesen und Kehrschaufel zusammenwischen, danach den Boden mit einem Einwegtuch reinigen.'},
+      {type:'multitf', level:3, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Sie wünscht deine Hilfe, um eine kleine Kommode umzustellen.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich hebe die Kommode und trage sie alleine an einen anderen Ort.', correct:false, reason:'Allein schwere Möbel tragen ist nicht rückenschonend und gefährlich.'},
+          {statement:'Ich bitte den Nachbarn, mir zu helfen, damit wir sie zu zweit tragen können.', correct:true, reason:'Zu zweit tragen entlastet den Rücken.'},
+          {statement:'Ich schiebe eine Decke unter die Kommode, um sie zu ziehen.', correct:true, reason:'Ziehen statt heben schont den Rücken.'},
+          {statement:'Ich nehme die Hilfe von Frau Rosenthal an, um die Kommode zu heben.', correct:false, reason:'Sie sollte aus Sicherheitsgründen nicht beim Heben von Möbeln helfen.'}
+        ]},
+      {type:'frei', level:4, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Bei der Duschbegleitung ziehst du Handschuhe an.', prompt:'Begründe, weshalb du das machst.',
+        model:'Laut offizieller Musterlösung: um eine Ansteckung mit Fusspilz zu vermeiden.'}
+    ]
+  }
+];
+
+const topicsB = [
+  {id:'prophylaxen', priority:'B', title:'Prophylaxen', comp:'1.4',
+    intro:['Sturz-, Dekubitus-, Thrombose-, Kontrakturen- und Pneumonieprophylaxe sind die wichtigsten Formen.','Ziel: Komplikationen von vornherein verhindern, nicht erst behandeln.'],
+    questions:[
+      {type:'mc', level:2, context:'', prompt:'Welche Prophylaxe verhindert Druckgeschwüre?', options:['Thromboseprophylaxe','Dekubitusprophylaxe','Pneumonieprophylaxe','Kontrakturenprophylaxe'], correct:1,
+        explain:'Dekubitusprophylaxe (z. B. regelmässige Lagewechsel) beugt Druckgeschwüren vor.'},
+      {type:'frei', level:3, context:'', prompt:'Nenne eine Massnahme zur Thromboseprophylaxe.',
+        model:'Zum Beispiel: Kompressionsstrümpfe (MTS) korrekt anziehen, faltenfrei; Bewegung/Beine hochlagern fördern.'},
+      {type:'mc', level:1, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Eine Hautveränderung am Steissbein könnte ein Dekubitus sein.', prompt:'Welches Stadium beschreibt eine Rötung, die auf Druck nicht verschwindet?',
+        options:['Stadium 1','Stadium 2','Stadium 3','Stadium 4'],
+        correct:0, explain:'Stadium 1 ist eine nicht wegdrückbare Rötung – das früheste Anzeichen eines beginnenden Dekubitus (offizielle Musterlösung).'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). In Rücksprache mit der zuständigen Fachperson führst du Massnahmen zur Dekubitusprophylaxe durch.', prompt:'Nenne vier Massnahmen.',
+        model:'Laut offizieller Musterlösung: regelmässig umlagern (z. B. alle zwei Stunden), Hautpflege (gut waschen, trocknen, eincremen), eine Antidekubitus-Matratze verwenden, für ausreichende Flüssigkeit und eiweissreiche Ernährung sorgen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Sie erwartet jeden Morgen, dass du ihr die Kompressionsstrümpfe anziehst.', prompt:'Nenne drei Grundsätze, die du dabei beachtest.',
+        model:'Laut offizieller Musterlösung: sie sollte sich vor dem Anziehen 20-30 Minuten hinlegen, die Strümpfe dürfen keine Falten haben, die Farbe der Zehen wird kontrolliert.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Vor der Mobilisation führst du mit ihm Bewegungsübungen zur Thromboseprophylaxe am gesunden Bein durch.', prompt:'Nenne zwei Bewegungsübungen, die du ihm zeigst.',
+        model:'Laut offizieller Musterlösung: den Fuss bewegen, die Wadenmuskulatur anspannen, die Zehen beugen und strecken, das Bein wie beim Radfahren bewegen.'},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum Dekubitusprophylaxe (z. B. regelmässige Lagewechsel) so wichtig ist.',
+        model:'Weil sie Druckgeschwüre von vornherein verhindert – es ist deutlich einfacher, einem Dekubitus vorzubeugen, als ihn später zu behandeln.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Hautkontrolle bei Frau Grosjean.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Am Steissbein zeigt sich eine Rötung, die auf Druck nicht verschwindet.','Frau Grosjean hat sich zu wenig bewegt.','Die Haut sieht heute nicht gut aus.','Es besteht ein hohes Dekubitusrisiko.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, messbare Beobachtung. Die anderen sind ein Vorwurf, zu vage oder bereits eine fachliche Einschätzung statt einer reinen Beobachtung.'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Bei der Hautkontrolle entdeckst du eine bereits offene Stelle am Steissbein.', prompt:'Darfst du diese Wunde selbst behandeln?',
+        model:'Nein – offene Wunden gehören in die Kompetenz der Pflegefachperson. Ich melde den Befund sofort und dokumentiere ihn, behandle die Wunde aber nicht selbst.'}
+    ]},
+  {id:'anatomie', priority:'B', title:'Anatomie & Physiologie (Grundlagen)',
+    intro:['Grundkenntnisse zu Haut, Bewegungsapparat, Herz-Kreislauf und Ausscheidungsorganen genügen.','Zusammenhänge verstehen ist wichtiger als alles auswendig zu können.'],
+    questions:[
+      {type:'mc', context:'', prompt:'Welches Organsystem umfasst Nieren, Blase und Harnröhre?', options:['Verdauungssystem','Harnsystem','Atmungssystem','Kreislaufsystem'], correct:1,
+        explain:'Nieren, Blase und Harnröhre gehören zum Harnsystem.'}
+    ]},
+  {id:'vitalzeichen', priority:'B', title:'Vitalzeichen', comp:'1.6',
+    intro:['Puls, Blutdruck, Temperatur und Atmung sind die wichtigsten Vitalzeichen.','Werte sofort nach der Messung dokumentieren und Auffälliges melden.'],
+    questions:[
+      {type:'tf', level:5, context:'', prompt:'„Ich melde einen auffälligen Messwert erst am Ende der Schicht.“ – Richtig so?',
+        correct:false, correction:'Richtig wäre: Auffällige Werte sofort der zuständigen Fachperson melden.'},
+      {type:'frei', level:2, context:'', prompt:'Nenne zwei Vitalzeichen, die du regelmässig kontrollieren kannst.',
+        model:'Zum Beispiel: Puls und Blutdruck; auch Temperatur und Atemfrequenz sind Vitalzeichen.'},
+      {type:'mc', level:1, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Das Fieberthermometer zeigt 39.4 °C an.', prompt:'Wie bezeichnet man diesen Fieberwert?',
+        options:['Erhöhte Temperatur','Leichtes Fieber','Hohes Fieber','Sehr hohes Fieber'],
+        correct:2, explain:'39.4 °C gilt laut offizieller Musterlösung als hohes Fieber.'},
+      {type:'frei', level:5, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Sie messen einen deutlich erhöhten Fieberwert.', prompt:'Was machst du mit diesem Messwert?',
+        model:'Laut offizieller Musterlösung: den Wert sofort dokumentieren und der zuständigen Fachperson melden – die Beurteilung und weitere Massnahmen liegen nicht in deiner Kompetenz.'},
+      {type:'frei', level:2, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean).', prompt:'Nenne einen Vorteil und einen möglichen Nachteil eines Ohrthermometers.',
+        model:'Laut offizieller Musterlösung: Vorteil – einfach und schnell; Nachteil – Möglichkeit falscher Messwerte, z. B. durch einen verstopften Gehörgang oder falsche Positionierung.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Du kontrollierst nach dem Aufstehen sein Gewicht auf der Sitzwaage.', prompt:'Welche Grundsätze beachtest du bei der Gewichtskontrolle? Nenne zwei.',
+        model:'Laut offizieller Musterlösung: möglichst immer zur gleichen Tageszeit wiegen, gleiche Kleidung/gleiche Bedingungen (mit oder ohne Schuhe) und immer dieselbe Waage benutzen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Du erhältst den Auftrag, Blutdruck, Puls und Temperatur zu messen.', prompt:'Welche Grundsätze beachtest du bei der Kontrolle der Vitalzeichen?',
+        model:'Laut offizieller Musterlösung: in Ruhe messen, die Blutdruckmanschette der Oberarmgrösse anpassen, einengende Kleidung entfernen, die Manschette direkt auf die Haut legen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Du kontrollierst sein Gewicht mit einer Sitzwaage.', prompt:'Worauf achtest du bei der Gewichtskontrolle? Nenne vier wichtige Punkte.',
+        model:'Laut offizieller Musterlösung: die Sitzfläche mit einem Tuch abdecken, die Waage vor dem Wiegen einstellen/eichen, immer zur selben Tageszeit wiegen, vorher fragen, ob die Person bereits Wasser gelöst hat.'},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum du einen auffälligen Vitalzeichen-Messwert sofort und nicht erst am Ende der Schicht meldest.',
+        model:'Weil sich der Gesundheitszustand der Klientin/des Klienten schnell verändern kann – eine sofortige Meldung ermöglicht rechtzeitiges Handeln der zuständigen Fachperson.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Temperaturmessung bei Frau Grosjean.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Frau Grosjean hat wahrscheinlich eine Erkältung.','Temperatur gemessen: 39.4 °C, um 14 Uhr.','Frau Grosjean fühlt sich schlecht.','Das Fieber ist besorgniserregend.'],
+        correct:1, explain:'Nur diese Aussage ist eine reine, nachprüfbare Messung mit Zeitangabe. Die anderen sind eine Diagnose, eine Deutung oder eine Wertung – das ist nicht deine Aufgabe als AGS.'}
+    ]},
+  {id:'ernaehrung', priority:'B', title:'Ernährung',
+    intro:['Ausgewogene Ernährung und individuelle Bedürfnisse/Gewohnheiten beachten.','Mahlzeiten sind auch soziale Rituale – wichtig für Wohlbefinden.'],
+    questions:[
+      {type:'frei', context:'', prompt:'Warum ist eine gemeinsame Mahlzeit mehr als nur Nahrungsaufnahme?',
+        model:'Weil sie Rituale, soziale Kontakte und Wohlbefinden fördert – nicht nur den Körper, auch die Seele nährt.'}
+    ]},
+  {id:'demenz', priority:'B', title:'Demenz & kognitive Einschränkungen',
+    intro:['Ruhig, einfach und klar kommunizieren; kurze Sätze, viel Geduld.','Vertraute Rituale und Strukturen geben Sicherheit.','Nicht korrigieren oder diskutieren, wenn jemand desorientiert ist – lieber ablenken oder eingehen.'],
+    questions:[
+      {type:'mc', context:'Ein Klient mit Demenz behauptet, er müsse noch zur Arbeit gehen (obwohl er seit Jahren pensioniert ist).', prompt:'Was ist die einfühlsamste Reaktion?',
+        options:['Ihn korrigieren: „Sie sind doch pensioniert!“','Auf sein Gefühl eingehen und ihn sanft ablenken','Ihn ignorieren','Streng widersprechen'],
+        correct:1, explain:'Auf das Gefühl eingehen, statt zu korrigieren, vermeidet unnötigen Stress und Verwirrung.'}
+    ]},
+  {id:'aktivierung', priority:'B', title:'Aktivierung', comp:'2.2',
+    intro:['Ressourcen und Interessen der Klientin/des Klienten einbeziehen.','Sicherheit beachten (z. B. spitze Gegenstände beim Basteln).','Erfolgserlebnisse ermöglichen, nicht überfordern.'],
+    questions:[
+      {type:'frei', level:3, context:'', prompt:'Nenne zwei Materialien, die sich für eine einfache Aktivierung eignen, und wofür.',
+        model:'Zum Beispiel: Ball – zum Werfen/Fangen für Koordination; Wolle/Stoff – zum Ertasten für die Sinneswahrnehmung.'},
+      {type:'frei', level:1, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie schreibt zusammen mit anderen Klientinnen und Klienten die Heimzeitung.', prompt:'Nenne vier Ressourcen, die durch diese Aktivität gefördert werden.',
+        model:'Laut offizieller Musterlösung: Gedächtnis, Konzentration, Denken, Kommunikation, soziale Kontakte, Vertrauen.'},
+      {type:'tf', level:2, context:'Quelle: QV 2017, Teil 2 (Herr Rossi).', prompt:'„Menschen mit einer Behinderung werden nicht gerne aktiviert.“ – Richtig?',
+        correct:false, correction:'Richtig wäre: Aktivierung gibt Sinn im Alltag und verbessert das Lebensgefühl – auch bei Menschen mit einer Behinderung (offizielle Musterlösung).'},
+      {type:'frei', level:5, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Sie will nicht an einer geplanten Gruppenaktivität teilnehmen.', prompt:'Was tust du – reicht es, ihr zu sagen, die Aktivität sei obligatorisch?',
+        model:'Laut offizieller Musterlösung: nein. Richtig ist, sich zu ihr zu setzen, ihr aufmerksam zuzuhören, auf nonverbale Signale zu achten und die zuständige Fachperson zu informieren – die Entscheidung liegt bei der Klientin.'},
+      {type:'frei', level:2, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Die zuständige Fachperson bittet dich, ein Essensritual einzuführen.', prompt:'Nenne zwei passende Essensrituale.',
+        model:'Laut offizieller Musterlösung: gemeinsam ein Lied singen, ein Tischgebet oder einen Tischspruch, erst starten wenn alle das Essen haben, „guten Appetit“ wünschen.'},
+      {type:'frei', level:4, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Er nimmt zum ersten Mal an einer Aktivierungsgruppe teil, du begleitest ihn.', prompt:'Begründe, weshalb diese Begleitung wichtig ist.',
+        model:'Laut offizieller Musterlösung: Mit der Begleitung gibst du ihm Orientierung und Sicherheit an einem für ihn neuen Ort.'},
+      {type:'multitf', level:3, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Du erhältst den Auftrag, mit ihm das Zimmer nach seinen Bedürfnissen einzurichten.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich gehe zu Herrn Steiner und frage ihn nach seinen Bedürfnissen.', correct:true, reason:'So beziehst du ihn direkt in die Gestaltung ein.'},
+          {statement:'Ich gehe zu Herrn Steiner und sage ihm, wie ich sein Zimmer einrichten werde.', correct:false, reason:'Das nimmt ihm die Mitsprache – seine Wünsche sollten zuerst erfragt werden.'},
+          {statement:'Ich frage Herrn Steiner, wie er sein Zimmer zu Hause eingerichtet hat.', correct:true, reason:'Das gibt dir Hinweise auf seine Gewohnheiten und Vorlieben.'},
+          {statement:'Ich setze mich mit Herrn Steiner hin und sammle gemeinsam Ideen für die Zimmergestaltung.', correct:true, reason:'Gemeinsames Planen fördert Mitbestimmung und Wohlbefinden.'}
+        ]},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst nach dem Gedächtnistraining mit Frau Stojanovic.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Frau Stojanovic hat beim Gedächtnistraining aktiv mitgemacht und drei von vier Fragen richtig beantwortet.','Frau Stojanovic war heute sehr motiviert.','Die Aktivierung war ein voller Erfolg.','Frau Stojanovic mag Gedächtnistraining.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, messbare Beobachtung. Die anderen sind Deutungen ("motiviert", "mag") oder eine Wertung ("Erfolg").'}
+    ]},
+  {id:'fachbegriffe', priority:'B', title:'Fachbegriffe',
+    intro:['Wichtige Begriffe sicher kennen: Mobilisation, Kontraktur, Dekubitus, Inkontinenz, Prophylaxe, Vitalzeichen.','Fachbegriffe helfen, im Team präzise zu kommunizieren.'],
+    questions:[
+      {type:'mc', context:'', prompt:'Was bedeutet „Kontraktur“?', options:['Entzündung der Haut','Dauerhafte Gelenkversteifung/-verkürzung','Blutdruckabfall','Wundliegen'], correct:1,
+        explain:'Eine Kontraktur ist eine dauerhafte Verkürzung/Versteifung von Muskeln oder Gelenken.'}
+    ]},
+  {id:'arbeitssicherheit', priority:'B', title:'Arbeitssicherheit', transComp:'4.3',
+    intro:['Betriebliche Sicherheitsrichtlinien und Arbeitsschutzvorschriften kennen und einhalten.','Bei Unsicherheit: Hilfe holen, statt allein ein Risiko einzugehen.'],
+    questions:[
+      {type:'tf', context:'', prompt:'„Als Lernende/r darf ich jede Aufgabe allein übernehmen, auch wenn ich sie noch nie gemacht habe.“ – Richtig?',
+        correct:false, correction:'Richtig wäre: Bei neuen Aufgaben zuerst um Anleitung/Begleitung bitten, statt sie allein zu riskieren.'},
+      {type:'frei', level:1, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Im Schrank findest du eine unbeschriftete PET-Flasche und riechst, dass es sich um WC-Reiniger handelt.', prompt:'Welche Gefahr siehst du in dieser Situation?',
+        model:'Laut offizieller Musterlösung: Das Mittel wird evtl. falsch eingesetzt oder kann nicht dem Zweck zugeordnet werden. Der WC-Reiniger könnte mit einem Getränk verwechselt werden, da die Gefahrenhinweise der Produkteetikette fehlen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Du begleitest ihn zur Mobilisation in den Duschraum.', prompt:'Welche vier Massnahmen triffst du für seine Sicherheit?',
+        model:'Laut offizieller Musterlösung: rutschsichere Socken/rutschfeste Schuhe anziehen, eine Gehhilfe einsetzen, Stolperfallen entfernen, seine Ressourcen einbeziehen, das Tempo an ihn anpassen, ihn stützen und führen, ihn über die Arbeitsschritte informieren.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Du begleitest sie zum Frühstück.', prompt:'Beschreibe drei Massnahmen zur Sturzprophylaxe bei ihr.',
+        model:'Laut offizieller Musterlösung: Stolperfallen entfernen, darauf achten, dass Böden nicht nass sind, darauf achten, dass sie geschlossene Schuhe trägt und die Handläufe benutzt, auf ausreichend Licht achten.'},
+      {type:'frei', level:4, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Begründen"). Vor jedem Transfer in den Rollstuhl kontrollierst du zuerst, ob die Bremsen angezogen sind.', prompt:'Begründe, warum diese Kontrolle vor dem Hinsetzen zwingend nötig ist.',
+        model:'Ein Rollstuhl mit gelösten Bremsen kann beim Hinsetzen wegrollen – das kann zu einem Sturz mit ernsthaften Verletzungen führen. Die Bremsen zu prüfen, bevor sich jemand hinsetzt, ist eine der wichtigsten Sturz-Präventionsmassnahmen überhaupt.'}
+    ]},
+  {id:'sterben', priority:'B', title:'Begleitung von Sterbenden',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 1 – Frau Grosjean): In der letzten Lebensphase auf Zeichen des nahenden Todes achten und Beschwerden lindern.',
+      'Würde und Ruhe bewahren; die Person nicht alleine lassen.',
+      'Wünsche der sterbenden Person (z. B. Kontakt zu einer Organisation, spirituelle Bedürfnisse) ernst nehmen, aber an die zuständige Fachperson weiterleiten.'
+    ],
+    questions:[
+      {type:'frei', level:1, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean).', prompt:'Woran erkennst du, dass eine Klientin Schmerzen hat? Nenne zwei Anzeichen.',
+        model:'Laut offizieller Musterlösung: Stöhnen/Röcheln, Schreien, Gesicht verziehen, gekrümmte Haltung, Aggressivität.'},
+      {type:'frei', level:1, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean).', prompt:'Du beobachtest die Veränderung des Gesundheitszustandes. Nenne zwei Anzeichen für den nahenden Tod.',
+        model:'Laut offizieller Musterlösung: unregelmässiger Puls, Blutdruckabfall, Abnahme der Körpertemperatur, kalte/blasse/marmorierte Haut, Eintrübung des Bewusstseins, unregelmässige Atmung.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Du stellst fest, dass ihr Mund trocken ist.', prompt:'Nenne zwei Möglichkeiten, um den Mund zu befeuchten.',
+        model:'Laut offizieller Musterlösung: Befeuchtungsspray, Mundpflege/Lippenpflege, ein Fruchtstück oder Eiswürfel geben, mit einem Löffel etwas Flüssigkeit eingeben.'},
+      {type:'frei', level:2, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie äussert den Wunsch, eine Patientenverfügung zu verfassen.', prompt:'Was ist das wichtigste Ziel einer Patientenverfügung?',
+        model:'Laut offizieller Musterlösung: Sie ist ein Instrument der Selbstbestimmung – eine urteilsfähige Person legt darin fest, welchen medizinischen Massnahmen sie im Fall ihrer Urteilsunfähigkeit zustimmt oder nicht zustimmt.'},
+      {type:'frei', level:2, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Sie teilt dir mit, dass sie nicht reanimiert werden möchte.', prompt:'In welchem Dokument kann sie diesen Wunsch schriftlich festhalten?',
+        model:'Laut offizieller Musterlösung: in der Patientenverfügung.'}
+    ]}
+];
+
+const topicsBerufsrolle = [
+  {id:'berufsrolle', priority:'B', title:'Berufsrolle & Zusammenarbeit',
+    intro:[
+      'Reale Prüfungssituation (QV 2017, Teil 2 – Herr Rossi): Aussagen zur Teamarbeit werden als positiv oder negativ eingeordnet.',
+      'Gute Zusammenarbeit lebt von Offenheit, gegenseitiger Unterstützung und der Bereitschaft, Feedback anzunehmen.',
+      'Eigene Kompetenzgrenzen kennen und rechtzeitig Hilfe holen, statt allein zu improvisieren.'
+    ],
+    questions:[
+      {type:'multitf', level:2, context:'Quelle: QV 2017, Teil 2 (Herr Rossi).', prompt:'Kreuze an, ob die Aussage die Teamarbeit positiv oder negativ beeinflusst.', labels:['Positiv','Negativ'],
+        rows:[
+          {statement:'Ich frage bei Unsicherheiten nach.', correct:true, reason:'Nachfragen verhindert Fehler und zeigt Verantwortungsbewusstsein.'},
+          {statement:'Gegenseitige Hilfsbereitschaft und Unterstützung ist wichtig.', correct:true, reason:'Das stärkt den Zusammenhalt im Team.'},
+          {statement:'Weil wir Stress haben, sind Humor und gute Laune nicht möglich.', correct:false, reason:'Auch unter Stress helfen Humor und gute Laune dem Arbeitsklima.'},
+          {statement:'Wenn ich meine Lehre beendet habe, muss ich keine Kritik mehr annehmen.', correct:false, reason:'Konstruktive Kritik bleibt für die eigene Weiterentwicklung immer wichtig.'},
+          {statement:'Das gegenseitige Feedback fördert ein gutes Arbeitsklima.', correct:true, reason:'Offenes Feedback stärkt Vertrauen und Zusammenarbeit.'},
+          {statement:'Wenn ich mein Handeln reflektiere, lerne ich.', correct:true, reason:'Reflexion ist eine wichtige Grundlage für berufliches Wachstum.'}
+        ]}
+    ]},
+  {id:'kulturen', priority:'B', title:'Kulturen & Religionen',
+    intro:[
+      'Reale Prüfungssituation (QV 2018, Teil 2 – Frau Beuchat): Religiöse Speise- und Bestattungsregeln richtig zuordnen.',
+      'Gewohnheiten und Rituale respektieren, ohne sie zu werten oder in Frage zu stellen.',
+      'Bei Unsicherheit lieber nachfragen, statt Vermutungen über eine Religion anzustellen.'
+    ],
+    questions:[
+      {type:'matchmulti', level:2, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat, Christin).', prompt:'Ordne jede Regel der passenden Religion zu.',
+        categories:['Christentum','Islam','Judentum','Hinduismus','Buddhismus'],
+        rows:[
+          {statement:'Am Freitag wird kein Fleisch gegessen.', category:'Christentum'},
+          {statement:'Kühe gelten als heilig und dürfen nicht gegessen werden.', category:'Hinduismus'},
+          {statement:'Milchprodukte und Fleisch dürfen nicht gemischt werden.', category:'Judentum'},
+          {statement:'Es ist nicht erlaubt, Schweinefleisch zu essen.', category:'Islam'},
+          {statement:'Tote müssen 45 Minuten ruhen können, ohne dass sie berührt werden.', category:'Buddhismus'}
+        ]}
+    ]}
+];
+
+const topicsC = [
+  {id:'administration', title:'Administration & Logistik', desc:'Einfache administrative Arbeiten, Material bewirtschaften, Geräte reinigen und warten.'},
+  {id:'haushalt', title:'Haushalt', desc:'Wäschepflege, Einkauf, Pflege von Wohnbereich, Pflanzen und Tieren.'},
+  {id:'recht', title:'Rechtliche Grundlagen', desc:'Berufsgeheimnis, Patientenrechte, grober Überblick reicht meist.'}
+];
+
+// Praxis-Kompetenzen, die für die individuelle praktische Arbeit (IPA) ausgewählt werden können.
+// Grundlage: "Übersicht Prüfungskompetenzen IPA" (vorgesetzte Fachkraft wählt 6 von diesen 19 aus:
+// je 2 aus HKB 1 und 2, je 1 aus HKB 3 und 5).
+// Alle Aufgaben unten basieren auf echten, freigegebenen Prüfungssituationen (QV 2016–2019,
+// Kanton Zürich / OdASanté-SAVOIRSOCIAL), paraphrasiert, mit an die offiziellen Lösungen
+// angelehnten Musterantworten. Quelle jeweils im "Quelle:"-Hinweis der Aufgabe vermerkt.
+const topicsIPA = [
+  {id:'ankleiden', priority:'IPA', title:'An- und Auskleiden', comp:'1.1',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 2 – Herr Steiner): Nach der Körperpflege wird er beim Anziehen unterstützt.',
+      'Ressourcen fördern: die Klientin/den Klienten die Kleider selbst auswählen und möglichst selbstständig anziehen lassen.',
+      'Nur so viel übernehmen, wie wirklich nötig ist – das erhält Autonomie und Würde.'
+    ],
+    questions:[
+      {type:'tf', level:2, context:'Quelle: QV 2019, Teil 2 (Herr Steiner).', prompt:'„Ich ziehe Herrn Steiner die Kleider an, weil das schneller geht.“ – Ist das die richtige Vorgehensweise?',
+        correct:false, correction:'Richtig wäre: ihn die Kleider möglichst selbstständig anziehen lassen, um seine Ressourcen und Autonomie zu erhalten und zu fördern.'},
+      {type:'frei', level:3, context:'', prompt:'Wie unterstützt du eine Klientin bei der Auswahl der Kleider, ohne ihr alles abzunehmen?',
+        model:'Laut offizieller Musterlösung: die Person zum Kleiderschrank begleiten und selbst auswählen lassen, bei Bedarf eine kleine Auswahl anbieten, aus der sie wählen kann.'},
+      {type:'multitf', level:3, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie beendet die Körperpflege am Lavabo und braucht beim Ankleiden Hilfe.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich wähle für Frau Beuchat die Kleidungsstücke aus.', correct:false, reason:'Sie soll wo möglich selbst wählen – das fördert ihre Ressourcen.'},
+          {statement:'Ich helfe ihr in die Bluse und beginne mit dem linken, betroffenen Arm.', correct:true, reason:'Die betroffene Seite wird beim Anziehen zuerst versorgt.'},
+          {statement:'Ich kleide Frau Beuchat komplett an, damit es schneller geht.', correct:false, reason:'Das nimmt ihr unnötig Selbstständigkeit weg.'},
+          {statement:'Ich gebe ihr die Socken zum Anziehen.', correct:true, reason:'Das kann sie selbst übernehmen.'},
+          {statement:'Zum Schliessen der Bluse biete ich ihr einen Knöpfer an.', correct:true, reason:'Ein Hilfsmittel fördert die Selbstständigkeit.'},
+          {statement:'Ich stelle ihr Schuhe mit Schnürsenkeln bereit.', correct:false, reason:'Schuhe ohne Schnürsenkel (z. B. mit Klett) sind für sie einfacher zu handhaben.'}
+        ]},
+      {type:'frei', level:4, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Du lässt ihn beim Anziehen möglichst selbstständig machen, statt ihm die Kleider anzuziehen.', prompt:'Begründe, warum das die richtige Vorgehensweise ist.',
+        model:'Laut offizieller Musterlösung: So werden seine Ressourcen und seine Autonomie erhalten und gefördert, statt sie ihm unnötig abzunehmen.'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Frau Beuchat bittet dich, ihr vor dem Ankleiden ein Schmerzmittel zu geben, das noch nicht bereitgestellt wurde.', prompt:'Darfst du das Medikament selbst aus dem Schrank holen und ihr geben?',
+        model:'Nein – ich hole und verabreiche keine Medikamente eigenständig, sondern informiere die zuständige Fachperson.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst nach dem Ankleiden von Frau Beuchat.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Frau Beuchat hat die Bluse selbstständig zugeknöpft.','Frau Beuchat war heute besonders langsam.','Das Anziehen verlief mühsam.','Frau Beuchat hatte keine Motivation.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, nachprüfbare Beobachtung. Die anderen sind Deutungen oder zu unpräzise.'},
+      {type:'frei', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Erkennen"). Du hilfst Frau Beuchat beim Anziehen.', prompt:'Woran erkennst du, dass ein Kleidungsstück nicht mehr passt oder unangenehm sitzt? Nenne zwei Anzeichen.',
+        model:'Zum Beispiel: die Klientin zieht am Stoff, wirkt unruhig, oder sagt/zeigt, dass es drückt oder zwickt.'}
+    ]},
+  {id:'tagesstruktur', priority:'IPA', title:'Tagesstruktur im Alltag', comp:'2.1',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 3 – Herr Cotti, Spitex): Die kommende Woche wird geplant, mit Spitexeinsätzen, Arzttermin, Besuch und Spaziergang.',
+      'Alle festen und individuellen Termine korrekt und vollständig in die Agenda eintragen.',
+      'Die Tagesstruktur berücksichtigt sowohl feste Einsätze als auch persönliche Wünsche.'
+    ],
+    questions:[
+      {type:'frei', level:2, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Nenne zwei feste Elemente, die typischerweise die Tagesstruktur eines Spitex-Klienten prägen.',
+        model:'Zum Beispiel: regelmässige Spitexeinsätze zu festen Zeiten, wiederkehrende Arzttermine oder Besuche von Angehörigen.'},
+      {type:'mc', level:4, context:'', prompt:'Warum trägst du alle Termine sorgfältig und korrekt in die Agenda einer Klientin ein?',
+        options:['Nur damit es ordentlich aussieht','Damit nichts vergessen geht und alle Beteiligten informiert sind','Das ist nicht wichtig','Nur für die eigene Erinnerung'],
+        correct:1, explain:'Eine vollständige Agenda sorgt dafür, dass Team und Angehörige den Überblick behalten.'},
+      {type:'frei', level:4, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Du schlägst ihm zwei Aktivitäten vor.', prompt:'Begründe: Was förderst du mit einer gewählten Aktivität (z. B. Spaziergang oder Gedächtnistraining)?',
+        model:'Laut offizieller Musterlösung z. B.: ein Bewegungsangebot fördert die Beweglichkeit, ein Quiz die Gedächtnisfähigkeit, gemeinsames Musikhören die Selbstbestimmung – je nach gewählter Tätigkeit passend zur Person begründen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Beim Spaziergang läuft sie schneller als die Gruppe, du wartest mit ihr auf die anderen.', prompt:'Wie nutzt du diese Wartezeit sinnvoll mit ihr? Beschreibe zwei Möglichkeiten.',
+        model:'Laut offizieller Musterlösung: dich mit ihr unterhalten, ihr Fragen zu Beobachtbarem stellen, gemeinsam etwas sammeln oder an Blumen riechen.'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Herr Cotti möchte kurzfristig einen zusätzlichen Coiffeur-Termin, der mit einem geplanten Spitexeinsatz kollidiert.', prompt:'Entscheidest du diese Terminänderung selbst?',
+        model:'Nein – Terminkollisionen mit Spitexeinsätzen bespreche ich mit der zuständigen Fachperson, bevor ich etwas in der Agenda ändere.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Wochenplanung von Herrn Cotti.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Herr Cotti hat am Dienstag um 9 Uhr einen Spitex-Termin.','Herr Cotti mag seine Termine nicht.','Die Woche ist gut geplant.','Herr Cotti ist mit dem Plan unzufrieden.'],
+        correct:0, explain:'Nur diese Aussage ist ein konkreter, nachprüfbarer Fakt. Die anderen sind Deutungen oder Wertungen.'},
+      {type:'frei', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Erkennen").', prompt:'Woran erkennst du, dass die Wochenplanung eines Klienten zu voll bzw. überlastet ist? Nenne zwei Anzeichen.',
+        model:'Zum Beispiel: zu viele Termine an einem Tag ohne Pausen dazwischen, der Klient wirkt gestresst oder äussert das selbst.'}
+    ]},
+  {id:'termine', priority:'IPA', title:'Begleiten zu Terminen', comp:'2.3',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 3 – Herr Cotti): Du begleitest einen Klienten zum ersten Mal zu seinem Hausarzt.',
+      'Vor dem Termin klären: Adresse, ob ein Transport organisiert werden muss, was mitgenommen werden muss.',
+      'Bei externen Fahrdiensten nur die nötigen organisatorischen Informationen weitergeben – Berufsgeheimnis beachten.'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Du begleitest einen Klienten zum ersten Mal zu einem Arzttermin. Nenne zwei Abklärungen, die du im Voraus triffst.',
+        model:'Laut offizieller Musterlösung: die Adresse der Praxis klären, prüfen ob ein Transport organisiert werden muss und was mitgenommen werden muss (z. B. Versichertenkarte).'},
+      {type:'frei', level:5, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal, Spitex).', prompt:'Eine Klientin wird von einem Fahrdienst für einen Arztbesuch abgeholt. Welche Informationen gibst du dem Fahrer?',
+        model:'Zum Beispiel: Abholzeit und Zielort sowie ob ein Hilfsmittel wie ein Rollstuhl mitgenommen werden muss – keine medizinischen Details, dafür gilt das Berufsgeheimnis.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Sie hat am Dienstag einen Zahnarzttermin.', prompt:'Du bereitest vor Arbeitsschluss alles für diesen Termin vor. Nenne vier Punkte der Vorbereitung.',
+        model:'Laut offizieller Musterlösung z. B.: Termin-Uhrzeit und Adresse notieren, Transport organisieren, Versichertenkarte/Unterlagen bereitlegen, die Klientin über den Termin informieren.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Du begleitest ihn mit den Gehstöcken in die Röntgenabteilung; Sicherheit und Orientierung stehen im Vordergrund.', prompt:'Nenne zwei Massnahmen, die du dabei triffst.',
+        model:'Laut offizieller Musterlösung: den Weg auf Stolperfallen kontrollieren, ihn fragen, ob er sich gut fühlt, sein Gehtempo beobachten und dein eigenes Tempo daran anpassen.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Begleitung von Herrn Cotti zum Arzttermin.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Herr Cotti hatte um 10 Uhr einen Termin bei Dr. Meier, ich habe ihn begleitet.','Der Termin war eigentlich unnötig.','Herr Cotti war beim Arzt sichtlich genervt.','Alles verlief wie erwartet.'],
+        correct:0, explain:'Nur diese Aussage ist ein konkreter, nachprüfbarer Fakt. Die anderen sind eine Wertung, eine Deutung oder zu unpräzise.'},
+      {type:'frei', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Erkennen"). Du begleitest einen Klienten zu einem Termin.', prompt:'Woran erkennst du, dass er unsicher oder ängstlich ist? Nenne zwei Anzeichen.',
+        model:'Zum Beispiel: zögerlicher Gang, häufiges Nachfragen, angespannte Körperhaltung, wenig Blickkontakt.'},
+      {type:'frei', level:2, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Wissen").', prompt:'Wie nennt man das Dokument, in dem Termine, Adressen und Uhrzeiten einer Klientin festgehalten werden?',
+        model:'Agenda bzw. Terminkalender – oft auch Teil der Pflegedokumentation.'},
+      {type:'frei', level:4, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Begründen").', prompt:'Begründe, warum du dich vor einem Termin über den genauen Weg und die benötigten Unterlagen informierst.',
+        model:'Damit der Termin reibungslos und ohne unnötigen Stress verläuft und sich die Klientin/der Klient dabei sicher fühlt.'}
+    ]},
+  {id:'essen_trinken', priority:'IPA', title:'Essen und Trinken unterstützen', comp:'2.4',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 1 – Frau Grosjean, Terminalphase): Eine geschwächte Klientin wird im Bett beim Frühstück unterstützt, mit Fokus darauf, dass sie sich nicht verschluckt.',
+      'Sitzende Position und freien Nacken sicherstellen, im Tempo der Klientin bleiben.',
+      'Bei feinmotorischen Einschränkungen (QV 2019, Teil 3 – Herr Cotti) z. B. beim Einschenken oder Öffnen von Verpackungen unterstützen.'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean).', prompt:'Du gibst einer geschwächten Klientin das Frühstück im Bett ein. Nenne drei Massnahmen, damit sie sich nicht verschluckt.',
+        model:'Laut offizieller Musterlösung: die Klientin in eine sitzende Position bringen, ihr Zeit lassen und das Tempo anpassen, auf verbale und nonverbale Signale achten und Blickkontakt halten.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Ein Klient kann wegen eingeschränkter Handfunktion nicht mehr alles allein zubereiten. Nenne zwei konkrete Hilfestellungen beim Frühstück.',
+        model:'Laut offizieller Musterlösung: die Kaffeetasse nicht zu voll einschenken, beim Öffnen von Konfitüre oder Joghurt helfen, das Brot mitstreichen.'},
+      {type:'frei', level:2, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal, jüdischen Glaubens).', prompt:'Nenne zwei Regeln, die du bei der Zubereitung einer koscheren Mahlzeit berücksichtigst.',
+        model:'Laut offizieller Musterlösung: Milchprodukte und Fleisch nicht mischen, kein Schweinefleisch, keine Krustentiere.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Du bereitest das Frühstückstablett vor.', prompt:'Welche Informationen brauchst du dazu? Nenne zwei.',
+        model:'Laut offizieller Musterlösung: ihre Wünsche/Ernährungsgewohnheiten, Nahrungsmittelunverträglichkeiten oder Allergien, die nötige Konsistenz der Nahrung, ihren Grad der Selbstständigkeit.'},
+      {type:'frei', level:2, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie verschluckt sich häufig und ist besonders anfällig für eine Pneumonie.', prompt:'Erkläre das Fachwort Pneumonie.',
+        model:'Laut offizieller Musterlösung: Eine Pneumonie ist eine Entzündung der Lunge, die durch Bakterien oder Viren verursacht wird.'},
+      {type:'frei', level:5, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Sie nimmt vor dem Essen ein Medikament, das im Medikamentenschrank bereitsteht.', prompt:'Darfst du es einfach selbst holen und ihr geben?',
+        model:'Laut offizieller Musterlösung: Nein, nur wenn es dir direkt von der zuständigen Fachperson gegeben wird – das Verabreichen von Medikamenten liegt sonst ausserhalb deiner Kompetenz.'},
+      {type:'frei', level:2, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Er trinkt wenig, seine Trinkmenge wird neu kontrolliert.', prompt:'Was ist die empfohlene Flüssigkeitsmenge pro Tag für eine erwachsene Person?',
+        model:'Laut offizieller Musterlösung: zwischen 1,2 und 2 Litern pro Tag.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst nach dem Frühstück von Frau Grosjean.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Frau Grosjean hat die Hälfte des Frühstücks gegessen.','Frau Grosjean hatte heute keinen Hunger.','Das Frühstück verlief schwierig.','Frau Grosjean isst zu wenig.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, messbare Beobachtung. Die anderen sind Deutungen oder Wertungen.'},
+      {type:'beob', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Beobachtung vs. Interpretation"). Ordne zu:', statement:'„Frau Grosjean hustet beim Essen und wird rot im Gesicht.“',
+        correct:'beobachtung', explain:'Das ist eine konkrete, wahrnehmbare Feststellung – ein wichtiges Anzeichen für Verschlucken, aber noch keine Deutung.'},
+      {type:'frei', level:4, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Begründen").', prompt:'Begründe, warum du bei einer Klientin mit Schluckproblemen besonders auf eine aufrechte Sitzposition beim Essen achtest.',
+        model:'Eine aufrechte Sitzposition erleichtert das Schlucken und verringert das Risiko, dass Nahrung oder Flüssigkeit in die Luftröhre statt in die Speiseröhre gelangt.'}
+    ]},
+  {id:'zwischenmahlzeiten', priority:'IPA', title:'Frühstück & Zwischenmahlzeiten zubereiten', comp:'2.5',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 2 – Herr Steiner): Wegen Übergewicht soll beim Frühstück auf die Ernährung geachtet werden.',
+      'Ein ausgewogenes Frühstück enthält Kohlenhydrate, Eiweiss, Vitamine und Fett – in sinnvollen Mengen.',
+      'Klientinnen/Klienten wo möglich beim Zubereiten einbeziehen.'
+    ],
+    questions:[
+      {type:'frei', level:2, context:'Quelle: QV 2019, Teil 2 (Herr Steiner).', prompt:'Nenne je ein passendes Lebensmittel für ein ausgewogenes Frühstück zu den Nährstoffen Kohlenhydrate und Eiweiss.',
+        model:'Laut offizieller Musterlösung: Kohlenhydrate – Brot oder Getreideflocken; Eiweiss – Ei, Milch, Joghurt oder Käse.'},
+      {type:'mc', level:4, context:'', prompt:'Ein übergewichtiger Klient möchte sein Frühstück anpassen. Was ist eine sinnvolle Überlegung?',
+        options:['Frühstück ganz weglassen','Auf eine ausgewogene Auswahl an Nährstoffen achten, statt einseitig zu essen','Nur noch Süssgetränke trinken','Die Portionen verdoppeln'],
+        correct:1, explain:'Ausgewogenheit statt Auslassen oder Einseitigkeit ist die sinnvolle Empfehlung.'},
+      {type:'frei', level:4, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Beim Zubereiten des Brunchs beachtest du die Lebensmittelpyramide.', prompt:'Begründe, warum du die Lebensmittelpyramide beachtest.',
+        model:'Laut offizieller Musterlösung: damit eine gesunde und ausgewogene Ernährung sichergestellt wird.'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Herr Steiner möchte, dass du ihm eine spezielle Diät zur Gewichtsreduktion zusammenstellst.', prompt:'Darfst du das eigenständig tun?',
+        model:'Nein – eine Diätverordnung liegt in der Kompetenz von Ernährungsberatung/Arzt. Ich kann im Alltag auf eine ausgewogene Auswahl achten, aber keine Diät verordnen.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst das Frühstück von Herrn Steiner.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Herr Steiner hat ein Vollkornbrot mit Magerquark gegessen.','Herr Steiner isst zu ungesund.','Das Frühstück war heute ausgewogen.','Herr Steiner hatte wenig Appetit.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete Beobachtung. Die anderen sind eine Wertung oder eine Deutung.'},
+      {type:'frei', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Erkennen").', prompt:'Woran erkennst du, dass ein Frühstück nicht ausgewogen ist? Nenne zwei Anzeichen.',
+        model:'Zum Beispiel: überwiegend Süsses oder Fett, kaum Ballaststoffe, kein Eiweiss enthalten.'},
+      {type:'frei', level:3, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Handeln").', prompt:'Beschreibe, wie du gemeinsam mit einem Klienten eine einfache Zwischenmahlzeit (z. B. Fruchtsalat) zubereitest. Nenne drei Schritte.',
+        model:'Zum Beispiel: Hände waschen, Zutaten gemeinsam bereitstellen, den Klienten beim Schneiden anleiten und unterstützen, gemeinsam essen.'}
+    ]},
+  {id:'ruhen_schlafen', priority:'IPA', title:'Vorbereitung beim Ruhen und Schlafen', comp:'2.7',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 2 – Herr Steiner): Seit dem Heimeintritt schläft er schlecht.',
+      'Ursachen können körperlich, psychisch oder umgebungsbedingt sein – z. B. ungewohntes Bett, Lärm, Sorgen.',
+      'Gewohnte Schlafrituale ermöglichen, z. B. ein Getränk, Musik, ein Gespräch oder ein warmes Fussbad.'
+    ],
+    questions:[
+      {type:'frei', level:1, context:'Quelle: QV 2019, Teil 2 (Herr Steiner).', prompt:'Nenne drei mögliche Ursachen, warum ein Klient in einer neuen Umgebung schlecht schläft.',
+        model:'Laut offizieller Musterlösung: ungewohnte Umgebung oder ungewohntes Bett, Lärm, Sorgen/Stress, zu wenig Bewegung tagsüber, ungewohnte Zimmertemperatur.'},
+      {type:'frei', level:3, context:'', prompt:'Nenne zwei Schlafrituale, die du einem Klienten anbieten könntest.',
+        model:'Laut offizieller Musterlösung: ein warmes Getränk (Kräutertee, warme Milch) vor dem Schlafen, ruhige Musik hören, Vorlesen oder ein kurzes Gespräch über den Tag.'},
+      {type:'multitf', level:2, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Er sagt, dass er schlecht geschlafen hat.', prompt:'Kreuze an, was du ihm empfiehlst oder nicht empfiehlst.', labels:['Empfehle ich','Empfehle ich nicht'],
+        rows:[
+          {statement:'Herr Lang soll einen Baldriantee trinken, bevor er ins Bett geht.', correct:true, reason:'Baldrian wirkt beruhigend und schlaffördernd.'},
+          {statement:'Die Raumtemperatur im Schlafzimmer sollte 14–18 °C betragen.', correct:true, reason:'Diese Temperatur gilt als ideal für erholsamen Schlaf.'},
+          {statement:'Vor dem Schlafengehen soll er eine Zitrusfrucht essen.', correct:false, reason:'Zitrusfrüchte können anregend wirken und den Schlaf eher stören.'}
+        ]},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Ein Klient bittet dich, ihm ein Schlafmittel zu geben, das im Medikamentenschrank steht.', prompt:'Darfst du das selbst tun?',
+        model:'Nein – die Abgabe von Medikamenten liegt ausserhalb meiner Kompetenz und braucht die Anordnung der zuständigen Fachperson.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Nacht von Herrn Steiner.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Herr Steiner sagte, er sei um 3 Uhr aufgewacht.','Herr Steiner hat schlecht geschlafen.','Die Nacht war unruhig.','Herr Steiner ist übermüdet.'],
+        correct:0, explain:'Nur diese Aussage gibt eine konkrete, wörtlich wiedergegebene Aussage wieder. Die anderen sind Deutungen oder zu unpräzise.'},
+      {type:'frei', level:4, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Begründen").', prompt:'Begründe, warum du gewohnte Schlafrituale eines Klienten möglichst beibehältst.',
+        model:'Vertraute Rituale geben Sicherheit und Orientierung und können das Einschlafen erleichtern – besonders in einer neuen oder ungewohnten Umgebung.'}
+    ]},
+  {id:'essraum', priority:'IPA', title:'Essraum vor- und nachbereiten', comp:'3.1',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 2 – Herr Steiner): Nach dem Essen wird der Essraum aufgeräumt.',
+      'Nachbereitung: Tisch abräumen, Stühle hochstellen, Boden reinigen, Raum lüften, Abfall entsorgen.',
+      'Vorbereitung: Tisch decken, Getränke und Menü bereitstellen.'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 2 (Herr Steiner).', prompt:'Nenne vier Arbeitsschritte, um den Essraum nach dem Essen aufzuräumen.',
+        model:'Laut offizieller Musterlösung: Tisch abräumen, Stühle hochstellen, Boden reinigen, Raum lüften.'},
+      {type:'mc', level:2, context:'Quelle: QV 2016, Teil 1 (Frau Botta).', prompt:'Eine leere Weinflasche vom Essen soll entsorgt werden. In welchen Behälter gehört sie?',
+        options:['Papier','Glas','Metall','Allgemeiner Abfall'],
+        correct:1, explain:'Glasflaschen gehören ins Glas-Sammelgefäss, nicht in den allgemeinen Abfall (laut offizieller Musterlösung).'},
+      {type:'multitf', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Nach dem Einkaufen bereitest du den Essraum fürs Mittagessen vor.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich lüfte den Essraum.', correct:true, reason:'Frische Luft gehört zur Vorbereitung.'},
+          {statement:'Ich kontrolliere, ob Tische und Stühle sauber sind.', correct:true, reason:'Sauberkeit vor dem Essen ist wichtig.'},
+          {statement:'Ich beziehe anwesende Klientinnen und Klienten beim Tischdecken ein.', correct:true, reason:'Das fördert Ressourcen und Selbstständigkeit.'},
+          {statement:'Ich informiere mich, welcher Bewohner wo sitzt und was er braucht.', correct:true, reason:'So kannst du individuell auf Bedürfnisse eingehen.'}
+        ]},
+      {type:'matchmulti', level:3, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Nach dem Frühstück räumst du den Speisesaal auf.', prompt:'Nummeriere die Arbeitsschritte in der richtigen Reihenfolge (1–6).',
+        categories:['1','2','3','4','5','6'],
+        rows:[
+          {statement:'Geschirr abräumen', category:'1'},
+          {statement:'Tischsets reinigen', category:'2'},
+          {statement:'Tische reinigen', category:'3'},
+          {statement:'Stühle reinigen', category:'4'},
+          {statement:'Boden wischen', category:'5'},
+          {statement:'Abfälle entsorgen', category:'6'}
+        ]},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum eine leere Weinflasche ins Glas-Sammelgefäss und nicht in den allgemeinen Abfall gehört.',
+        model:'Weil Glas recycelbar ist und getrennt gesammelt werden muss – so wird es wiederverwertet, statt unnötig als Abfall zu enden.'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Ein Klient beschwert sich über das Essen und möchte, dass du den Menüplan der Institution änderst.', prompt:'Darfst du das selbst entscheiden?',
+        model:'Nein – Änderungen am Menüplan bespreche ich mit der zuständigen Fachperson bzw. der Küche. Ich kann seinen Wunsch aber weiterleiten.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst das Aufräumen des Essraums.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Der Essraum wurde um 13 Uhr gereinigt und gelüftet.','Der Essraum war heute sehr unordentlich.','Alles wurde wie immer gemacht.','Die Klientinnen waren heute unordentlich.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, nachprüfbare Beobachtung mit Zeitangabe. Die anderen sind Wertungen, Vorwürfe oder zu unpräzise.'},
+      {type:'frei', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Erkennen").', prompt:'Woran erkennst du, dass der Essraum noch nicht bereit für die nächste Mahlzeit ist? Nenne zwei Anzeichen.',
+        model:'Zum Beispiel: Krümel oder Flecken auf dem Tisch, benutztes Geschirr steht noch dort, der Boden ist nicht gereinigt.'}
+    ]},
+  {id:'wohnbereich', priority:'IPA', title:'Wohnbereich, Pflanzen & Tiere', comp:'3.2',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 3 – Herr Cotti): Er hält zwei Papageien, die mitversorgt werden.',
+      'Bei Haustieren: Fütterung, Käfigeinrichtung, Reinigung und Lüftung des Raumes beachten.',
+      'Beim Reinigen von Wohnräumen (QV 2017, Teil 3) auch Sturzrisiken erkennen (lose Teppiche, herumliegende Gegenstände).'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Ein Klient hält zwei Ziervögel in einem Käfig. Nenne zwei Punkte, die bei deren Haltung wichtig sind.',
+        model:'Laut offizieller Musterlösung: Art und Menge der Fütterung, regelmässige Reinigung des Käfigs, geeignetes Einstreumaterial, ruhiger Standort.'},
+      {type:'frei', level:1, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal).', prompt:'Nenne zwei mögliche Sturzquellen, die du beim Reinigen eines Wohnzimmers beachtest.',
+        model:'Zum Beispiel: lose Teppiche oder Läufer, herumliegende Kabel oder Gegenstände, schlecht sichtbare Türschwellen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Seine Frau bringt ihm einen Blumenstrauss.', prompt:'Was beachtest du bei der Pflege von Schnittblumen? Nenne vier Massnahmen.',
+        model:'Laut offizieller Musterlösung: Stiele schräg anschneiden, hölzerne Stiele leicht quetschen, handwarmes Wasser benutzen, Frischhaltemittel ins Wasser geben, die untersten Blätter entfernen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Du führst die Unterhaltsreinigung durch.', prompt:'Was tust du, bevor du den Staubsauger wegräumst? Nenne zwei Punkte.',
+        model:'Laut offizieller Musterlösung: kontrollieren, ob die Bürsten gereinigt sind, ob das Saugrohr nicht verstopft ist, und ob Staubbeutel/Filter bei Bedarf gewechselt werden müssen.'},
+      {type:'frei', level:2, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Sie wünscht, dass ihr Zimmer jeden Samstag gereinigt wird.', prompt:'Nenne die zwei Arten der Zimmerreinigung.',
+        model:'Laut offizieller Musterlösung: Sichtreinigung (z. B. aufräumen, Papierkorb leeren, lüften) und Grundreinigung (gründliche, periodische Reinigung).'},
+      {type:'multitf', context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Sie liebt Katzen und gibt der Heimkatze regelmässig Essensreste.', prompt:'Kreuze an, ob die Aussage richtig oder falsch ist.', labels:['Richtig','Falsch'],
+        rows:[
+          {statement:'Eine Katze ist eine umweltfreundliche Möglichkeit, um Essensreste zu entsorgen.', correct:false, reason:'Essensreste sind für Tiere oft ungeeignet oder ungesund – das ist keine sinnvolle Entsorgungsmethode.'},
+          {statement:'Es ist wichtig, die Futtermenge auf Alter und Aktivität der Katze abzustimmen.', correct:true, reason:'Über- oder Unterfütterung schadet der Gesundheit des Tieres.'}
+        ]},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Ein Klient bittet dich, seine Wohnung grundlegend umzugestalten und neue Möbel anzuschaffen.', prompt:'Entscheidest du das selbst?',
+        model:'Nein – grössere Veränderungen bespreche ich mit der zuständigen Fachperson bzw. den Angehörigen, das liegt nicht allein in meiner Entscheidung.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Wohnungsreinigung bei Herrn Cotti.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Die Papageien wurden gefüttert und der Käfig gereinigt.','Herr Cotti kümmert sich zu wenig um seine Vögel.','Die Wohnung war heute in Ordnung.','Herr Cotti liebt seine Tiere sehr.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, nachprüfbare Handlung. Die anderen sind ein Vorwurf, eine Wertung oder eine Deutung.'},
+      {type:'frei', level:4, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Begründen").', prompt:'Begründe, warum du beim Reinigen eines Wohnbereichs besonders auf Sturzrisiken achtest.',
+        model:'Weil Stürze zu ernsthaften Verletzungen führen können, besonders bei älteren oder in der Mobilität eingeschränkten Personen – Vorbeugen ist einfacher als die Folgen eines Sturzes zu behandeln.'}
+    ]},
+  {id:'einkauf', priority:'IPA', title:'Einkauf für den täglichen Bedarf', comp:'3.3',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 3 – Herr Cotti, Spitex): Anhand einer Bestandsliste wird die Einkaufsliste erstellt.',
+      'Vorhandenen Bestand mit der Sollliste vergleichen und die fehlende Menge berechnen.',
+      'Sorgfältig mit dem Geld der Klientin/des Klienten umgehen und Rückgeld korrekt berechnen.'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti). Nötig sind 2 kg Mehl, vorhanden sind noch 500 g.', prompt:'Wie viel Mehl musst du einkaufen?',
+        model:'1500 g (1,5 kg) – die vorhandene Menge wird von der benötigten Menge abgezogen (offizielle Musterlösung).'},
+      {type:'mc', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Du erhältst 80 Franken für den Einkauf, der 26.85 Franken kostet. Wie viel gibst du zurück?',
+        options:['53.15 Franken','56.85 Franken','63.15 Franken','50.00 Franken'],
+        correct:0, explain:'80.00 − 26.85 = 53.15 Franken (offizielle Musterlösung).'},
+      {type:'frei', level:3, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Ihr geht gemeinsam in den Dorfladen einkaufen.', prompt:'Welche Vorbereitungen triffst du vor dem Einkaufen? Nenne vier.',
+        model:'Laut offizieller Musterlösung: den Klienten informieren, eine Einkaufsliste schreiben, Geld und Taschen mitnehmen, wetter- und jahreszeitgerechte Kleidung/Schuhe wählen.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Ihr kauft gemeinsam Lebensmittel für die Wohngruppe ein.', prompt:'Was beachtest du beim Erstellen der Einkaufsliste? Beschreibe zwei Punkte.',
+        model:'Laut offizieller Musterlösung: die Menüplanung der kommenden Tage berücksichtigen, prüfen, was bereits im Vorrat vorhanden ist, die benötigte Menge berechnen, ihre Wünsche einbeziehen.'},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum du vor dem Einkaufen immer eine Einkaufsliste schreibst.',
+        model:'Damit nichts vergessen geht, nicht unnötig eingekauft wird und die Ressourcen der Klientin/des Klienten (z. B. ihre Wünsche) gezielt einbezogen werden können.'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Ein Klient bittet dich, für ihn eine grössere Summe Geld von seinem Konto abzuheben.', prompt:'Entscheidest du das selbst?',
+        model:'Nein – der Umgang mit grösseren Geldbeträgen und Kontobewegungen liegt ausserhalb meiner Kompetenz. Das bespreche ich mit der zuständigen Fachperson bzw. den Angehörigen oder der Beistandschaft.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst den Einkauf mit Herrn Cotti.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Herr Cotti hat die Einkaufsliste selbst erstellt und das Wechselgeld erhalten.','Der Einkauf verlief heute gut.','Herr Cotti war beim Einkaufen überfordert.','Herr Cotti kauft zu viel ein.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, nachprüfbare Handlung. Die anderen sind zu unpräzise, eine Deutung oder eine Wertung.'},
+      {type:'frei', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Erkennen").', prompt:'Woran erkennst du beim Einkaufen, dass ein Vorrat zur Neige geht? Nenne zwei Anzeichen.',
+        model:'Zum Beispiel: die Verpackung ist fast leer, auf der Bestandsliste steht eine geringe Menge, das Produkt fehlt im Schrank.'},
+      {type:'frei', level:2, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Wissen").', prompt:'Was versteht man unter einer «Bestandskontrolle» beim Einkauf?',
+        model:'Den Vergleich zwischen dem vorhandenen Vorrat und der benötigten bzw. gewünschten Menge, um zu bestimmen, was nachgekauft werden muss.'}
+    ]},
+  {id:'waeschepflege', priority:'IPA', title:'Wäschepflege', comp:'3.4',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 3 – Herr Cotti): Wäschestücke werden nach Waschart und Temperatur sortiert.',
+      'Grobe Einteilung: Kochwäsche 95 °C (robuste Weisswäsche), Buntwäsche 60 °C, Feinwäsche 30–40 °C, Handwäsche 20–30 °C (empfindliche Stoffe wie Wolle).',
+      'Pflegeetiketten der Kleidungsstücke immer beachten.'
+    ],
+    questions:[
+      {type:'mc', level:2, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Eine Wolljacke soll gewaschen werden. Welche Waschart passt am ehesten?',
+        options:['Kochwäsche 95 °C','Buntwäsche 60 °C','Handwäsche 20–30 °C','Gar nicht waschen'],
+        correct:2, explain:'Wolle ist empfindlich und wird laut offizieller Musterlösung als Handwäsche bei niedriger Temperatur gewaschen.'},
+      {type:'mc', level:2, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Eine weisse Baumwollserviette soll gewaschen werden. Welche Waschart passt am ehesten?',
+        options:['Handwäsche 20–30 °C','Feinwäsche 30–40 °C','Kochwäsche 95 °C','Gar nicht waschen'],
+        correct:2, explain:'Robuste, weisse Baumwollwäsche verträgt hohe Temperaturen und wird als Kochwäsche gewaschen (offizielle Musterlösung).'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Du bringst seine Kleider in die Wäscherei.', prompt:'Welche Massnahmen triffst du bei der Vorbereitung der Schmutzwäsche? Nenne vier.',
+        model:'Laut offizieller Musterlösung: Taschen leeren, Ärmel und Hosenumschläge ausrollen, Reissverschlüsse schliessen, Knöpfe öffnen, Gürtel entfernen.'},
+      {type:'frei', level:4, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Er friert schnell und soll ein wärmendes Kleidungsstück bekommen.', prompt:'Begründe, warum sich Wolle dafür besonders eignet.',
+        model:'Laut offizieller Musterlösung: Wolle hat ein gutes Wärmehaltevermögen, dadurch kühlen die Extremitäten weniger schnell ab.'},
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 3 (Frau Stojanovic). Sie schüttet sich kalten Kaffee über Hose und Bluse.', prompt:'Wie gehst du mit der verschmutzten Kleidung um? Beschreibe dein Vorgehen.',
+        model:'Laut offizieller Musterlösung: sie ins Zimmer begleiten, um die Kleidung zu wechseln, den Fleck möglichst sofort behandeln (z. B. einweichen), die Kleidung in die Waschküche bringen.'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Ein Wäschestück kommt aus der Wäscherei stark verfärbt und beschädigt zurück.', prompt:'Entscheidest du selbst, es zu entsorgen?',
+        model:'Nein – ich informiere die zuständige Fachperson bzw. die Klientin/den Klienten, bevor persönliche Gegenstände entsorgt werden.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Wäschevorbereitung von Herrn Steiner.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Die Schmutzwäsche wurde sortiert und die Taschen wurden geleert.','Die Wäsche war heute in einem schlechten Zustand.','Herr Steiner kümmert sich nicht um seine Kleidung.','Alles wurde wie üblich erledigt.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, nachprüfbare Handlung. Die anderen sind eine Wertung, ein Vorwurf oder zu unpräzise.'},
+      {type:'frei', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Erkennen").', prompt:'Woran erkennst du, dass ein Wäschestück eine spezielle Pflege braucht? Nenne zwei Anzeichen.',
+        model:'Zum Beispiel: das Pflegeetikett zeigt niedrige Temperatur/Handwäsche, das Material ist empfindlich (Wolle, Seide), es gibt Flecken, die vorbehandelt werden müssen.'}
+    ]},
+  {id:'administrativ', priority:'IPA', title:'Einfache administrative Arbeiten', comp:'5.1',
+    intro:[
+      'Reale Prüfungssituation (QV 2019/2017): Rückgeld nach dem Einkauf korrekt berechnen; neue Termine sorgfältig dokumentieren.',
+      'Bei Geldgeschäften: Betrag genau nachrechnen und Quittungen aufbewahren.',
+      'Termine gehören ins offizielle Dokumentationssystem, damit alle im Team informiert sind.'
+    ],
+    questions:[
+      {type:'mc', level:3, context:'Quelle: QV 2019, Teil 3 (Herr Cotti).', prompt:'Du erhältst 80 Franken, der Einkauf kostet 26.85 Franken. Wie viel Rückgeld gibst du zurück?',
+        options:['53.15 Franken','56.15 Franken','63.15 Franken','43.15 Franken'],
+        correct:0, explain:'80.00 − 26.85 = 53.15 Franken.'},
+      {type:'mc', level:6, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal).', prompt:'Eine Klientin bekommt einen neuen Arzttermin. Wo trägst du diesen korrekt ein?',
+        options:['Nur auf einen losen Zettel','In die Pflegedokumentation bzw. Agenda, damit das ganze Team informiert ist','Nirgends, das merke ich mir','Nur ins private Notizbuch'],
+        correct:1, explain:'Termine gehören ins offizielle Dokumentationssystem, damit alle Beteiligten informiert sind.'},
+      {type:'frei', level:4, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Du führst die Pflegedokumentation.', prompt:'Begründe: Weshalb schreibst du die Pflegedokumentation? Nenne zwei Punkte.',
+        model:'Laut offizieller Musterlösung: damit nichts Wichtiges vergessen geht, damit andere später nachlesen und darauf aufbauen können, und weil sie als Leistungsnachweis dient.'},
+      {type:'frei', level:6, context:'Quelle: QV 2018, Teil 2 (Frau Beuchat). Vor Arbeitsende hältst du deine Einträge fest.', prompt:'Beschreibe drei wichtige Informationen, die in die Pflegedokumentation gehören.',
+        model:'Laut offizieller Musterlösung z. B.: Beobachtungen zur Ausscheidung, neu angeordnete Massnahmen (z. B. Trinkbilanz), geäusserte Wünsche der Klientin, wichtige Ereignisse des Tages.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Ihr packt gemeinsam drei Kisten mit seinen persönlichen Gegenständen aus und erstellt eine Inventarliste.', prompt:'Beschreibe zwei Punkte, die du dabei beachtest.',
+        model:'Laut offizieller Musterlösung: eine übersichtliche, vollständige und lesbare Liste erstellen, Name und Anzahl jedes Gegenstandes genau notieren.'},
+      {type:'multitf', level:1, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Du überprüfst deinen Eintrag in der Pflegedokumentation.', prompt:'Kreuze an, ob der Eintrag eine Information oder eine Interpretation ist.', labels:['Information','Interpretation'],
+        rows:[
+          {statement:'Herr Lang trägt einen Antithrombosen-Strumpf.', correct:true, reason:'Das ist eine reine, nachprüfbare Feststellung.'},
+          {statement:'Ich habe Herrn Lang in die Röntgenabteilung begleitet.', correct:true, reason:'Das beschreibt eine durchgeführte Handlung – eine Information.'},
+          {statement:'Herr Lang geht nicht gerne nach Hause.', correct:false, reason:'Das ist eine Deutung seiner Gefühle, keine beobachtbare Tatsache.'},
+          {statement:'Herr Lang wird von seiner Tochter abgeholt.', correct:true, reason:'Das ist eine überprüfbare Tatsache.'}
+        ]},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Beim Erstellen der Inventarliste fällt dir auf, dass ein Gegenstand von Herrn Steiner fehlt.', prompt:'Was tust du?',
+        model:'Ich melde das der zuständigen Fachperson, statt es selbst zu klären oder zu ignorieren – Unstimmigkeiten bei Klienten-Eigentum müssen dokumentiert und gemeldet werden.'},
+      {type:'frei', level:2, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Wissen").', prompt:'Was versteht man unter einer «Inventarliste»?',
+        model:'Eine Liste, die alle vorhandenen Gegenstände (z. B. persönliches Eigentum einer Klientin) mit Anzahl und Beschreibung festhält.'}
+    ]},
+  {id:'apparate', priority:'IPA', title:'Apparate & Mobiliar reinigen', comp:'5.3',
+    intro:[
+      'Reale Prüfungssituation (QV 2018, Teil 1 – Herr Lang): Ein Toilettenaufsatz muss nach Gebrauch gereinigt und desinfiziert werden.',
+      'Reihenfolge beachten: erst reinigen, dann desinfizieren (thermisch oder chemisch).',
+      'Nach jeder Reinigung auch die Funktionstüchtigkeit prüfen (z. B. Bremsen, Verschleiss).'
+    ],
+    questions:[
+      {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang).', prompt:'Nenne zwei Grundsätze, die du bei der Reinigung und Desinfektion eines gemeinsam genutzten Hilfsmittels (z. B. Toilettenaufsatz) beachtest.',
+        model:'Zum Beispiel: zuerst reinigen, dann desinfizieren; Schutzhandschuhe tragen; das passende Desinfektionsverfahren (thermisch oder chemisch) wählen.'},
+      {type:'tf', level:2, context:'', prompt:'„Beim Reinigen eines Hilfsmittels kontrolliere ich nur die Sauberkeit, nicht die Funktionstüchtigkeit.“ – Richtig?',
+        correct:false, correction:'Richtig wäre: Zusätzlich zur Hygiene wird bei jeder Reinigung auch der allgemeine Zustand (z. B. Bremsen, Verschleiss) geprüft.'},
+      {type:'frei', level:1, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Du reinigst wöchentlich seinen Rollstuhl.', prompt:'Was kontrollierst du nach der Reinigung? Nenne drei Punkte.',
+        model:'Laut offizieller Musterlösung z. B.: Bremsen, Reifen/Rollen, lockere Schrauben oder Verschleiss an den Polstern.'},
+      {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Nach dem Frühstück reinigst und desinfizierst du den Nachttisch.', prompt:'Beschreibe drei Handlungen, die du dabei ausführst.',
+        model:'Laut offizieller Musterlösung: Handschuhe anziehen, die Gegenstände entfernen, den Nachttisch (inkl. Räder) desinfizieren und die Gegenstände danach zurücklegen.'},
+      {type:'multitf', level:3, context:'Quelle: QV 2017, Teil 1 (Herr Berger). Du reinigst anschliessend die Sitzwaage.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich reinige die Sitzwaage nach jeder Benutzung.', correct:true, reason:'Regelmässige Reinigung verhindert Keimübertragung.'},
+          {statement:'Ich benutze für die Reinigung Desinfektionsmittel.', correct:true, reason:'Desinfektion gehört zur hygienischen Reinigung.'},
+          {statement:'Ich reinige jedes Mal gründlich die Räder.', correct:false, reason:'Das ist nicht bei jeder Reinigung nötig, sondern nur bei sichtbarer Verschmutzung.'},
+          {statement:'Ich reinige die Sitzfläche und die Lehne.', correct:true, reason:'Das sind die Kontaktflächen, die am häufigsten berührt werden.'}
+        ]},
+      {type:'frei', level:4, context:'', prompt:'Begründe, warum du bei jeder Reinigung eines Hilfsmittels zusätzlich die Funktionstüchtigkeit (z. B. Bremsen) kontrollierst.',
+        model:'Weil ein Hilfsmittel nicht nur sauber, sondern auch sicher funktionsfähig sein muss – ein Defekt (z. B. defekte Bremsen) kann sonst unbemerkt bleiben und zu einem Sturz führen.'},
+      {type:'frei', level:5, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Abgrenzen"). Beim Reinigen stellst du fest, dass ein Rollstuhl einen Defekt hat, den du nicht selbst reparieren kannst.', prompt:'Was tust du?',
+        model:'Ich melde den Defekt der zuständigen Fachperson und nutze das Hilfsmittel nicht weiter, bis es repariert ist – selbst reparieren liegt ausserhalb meiner Kompetenz.'},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Reinigung des Rollstuhls von Herrn Lang.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Der Rollstuhl wurde gereinigt, die Bremsen funktionieren einwandfrei.','Der Rollstuhl war in schlechtem Zustand.','Die Reinigung war heute nötig.','Der Rollstuhl wird zu wenig gepflegt.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, nachprüfbare Feststellung inkl. Funktionskontrolle. Die anderen sind vage oder ein Vorwurf.'}
+    ]},
+  {id:'material', priority:'IPA', title:'Materialbewirtschaftung', comp:'5.4',
+    intro:[
+      'Reale Prüfungssituation (QV 2019, Teil 2 / QV 2016, Teil 3): Rollstuhl reinigen sowie eine Pflegematerial-Lieferung kontrollieren und einräumen.',
+      'Beim Reinigen: von oben nach unten, von sauber zu weniger sauber vorgehen.',
+      'Bei Lieferungen: Menge mit Bestellliste vergleichen, neues Material nach «first in, first out» einräumen.'
+    ],
+    questions:[
+      {type:'tf', level:2, context:'Quelle: QV 2019, Teil 2 (Herr Steiner).', prompt:'„Beim Reinigen eines Rollstuhls kontrolliere ich nur die Sauberkeit, nicht die Funktion der Bremsen.“ – Richtig?',
+        correct:false, correction:'Richtig wäre: Zusätzlich zur Hygiene werden bei jeder Reinigung auch Bremsen, Reifen und der allgemeine Zustand geprüft (offizielle Musterlösung).'},
+      {type:'frei', level:4, context:'Quelle: QV 2016, Teil 3.', prompt:'Warum räumst du neu geliefertes Pflegematerial hinten in den Schrank statt nach vorne?',
+        model:'Damit die älteren Produkte zuerst gebraucht werden («first in, first out») und nichts ungenutzt das Ablaufdatum überschreitet.'},
+      {type:'frei', level:5, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Am Nachmittag trifft die Lieferung von Milchprodukten ein – der Lieferschein fehlt.', prompt:'Wie gehst du damit um?',
+        model:'Laut offizieller Musterlösung: die zuständige Fachperson informieren, weil der Lieferschein fehlt – nicht einfach selbst entscheiden, ob die Ware trotzdem eingeräumt wird.'},
+      {type:'multitf', level:5, context:'Quelle: QV 2017, Teil 2 (Herr Rossi). Am Nachmittag erhältst du die Lieferung der Milchprodukte.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich ordne neue Ware hinter der älteren Ware ein.', correct:true, reason:'«First in, first out» – ältere Produkte werden zuerst verbraucht.'},
+          {statement:'Ich räume die gelieferte Ware in den Kühlschrank, wenn ich dafür Zeit habe.', correct:false, reason:'Kühlware muss sofort eingeräumt werden, nicht erst später.'},
+          {statement:'Ich informiere die zuständige Fachperson, weil der Lieferschein fehlt.', correct:true, reason:'Fehlende Lieferscheine gehören gemeldet.'},
+          {statement:'Ich nehme abgelaufene oder verdorbene Produkte aus dem Kühlschrank.', correct:true, reason:'Das gehört zur sorgfältigen Materialbewirtschaftung.'}
+        ]},
+      {type:'multitf', level:2, context:'Quelle: QV 2019, Teil 2 (Herr Steiner). Du reinigst seinen Rollstuhl.', prompt:'Kreuze an, ob die Handlung richtig oder falsch ist.',
+        rows:[
+          {statement:'Ich gehe von sauber zu schmutzig vor.', correct:true, reason:'Das ist die richtige Reinigungsrichtung, damit du keinen Schmutz auf bereits saubere Stellen verschleppst (offizielle Musterlösung).'},
+          {statement:'Ich verschleppe den bodennahen Schmutz nicht zur Sitzfläche oder Armlehne.', correct:true, reason:'Das entspricht dem Grundsatz «von oben nach unten» reinigen (offizielle Musterlösung).'}
+        ]},
+      {type:'multitf', level:5, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Du nimmst den Wagen mit dem bestellten Pflegematerial für die Abteilung entgegen.', prompt:'Kreuze an, was du tust oder nicht tust.',
+        rows:[
+          {statement:'Ich versorge das Material und werde es später kontrollieren.', correct:false, reason:'Die Kontrolle muss sofort bei Erhalt erfolgen, nicht erst später.'},
+          {statement:'Ich kontrolliere anhand der Bestellung, ob das richtige Material eingetroffen ist.', correct:true, reason:'So stellst du sicher, dass alles Bestellte auch geliefert wurde.'},
+          {statement:'Ich kontrolliere, ob die Menge stimmt.', correct:true, reason:'Mengenkontrolle gehört zur sorgfältigen Materialbewirtschaftung.'},
+          {statement:'Ich kontrolliere, ob das Material beschädigt ist.', correct:true, reason:'Beschädigte Ware muss erkannt und gemeldet werden.'},
+          {statement:'Ich vertraue dem Lieferanten und kontrolliere das Material nicht.', correct:false, reason:'Jede Lieferung muss unabhängig vom Vertrauen zum Lieferanten kontrolliert werden.'}
+        ]},
+      {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Materiallieferung.', prompt:'Welcher Eintrag ist korrekt formuliert?',
+        options:['Die gelieferte Menge stimmte mit der Bestellung überein.','Der Lieferant war zuverlässig.','Es gab heute keine Probleme.','Alles war wie immer in Ordnung.'],
+        correct:0, explain:'Nur diese Aussage ist eine konkrete, nachprüfbare Feststellung. Die anderen sind Wertungen oder zu unpräzise.'},
+      {type:'frei', level:1, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Erkennen").', prompt:'Woran erkennst du, dass Pflegematerial bald nachbestellt werden muss? Nenne zwei Anzeichen.',
+        model:'Zum Beispiel: der Bestand im Schrank ist gering, auf der Inventarliste steht eine Mindestmenge, ein häufig genutztes Produkt ist fast leer.'},
+      {type:'frei', level:3, context:'Übung nach dem Prüfungsmuster (Fragetechnik "Handeln").', prompt:'Beschreibe, wie du eine Materiallieferung fachgerecht einräumst.',
+        model:'Zum Beispiel: Menge und Zustand kontrollieren, altes Material nach vorne stellen und neues nach hinten («first in, first out»), den Lagerort sauber und übersichtlich halten.'}
+    ]}
+];
+
+// Übersicht der 19 Handlungskompetenzen, aus denen für die individuelle praktische Arbeit (IPA)
+// 6 ausgewählt werden (je 2 aus HKB 1+2, je 1 aus HKB 3+5). Grundlage: Formular der vorgesetzten Fachkraft.
+const IPA_COMPETENCIES = [
+  {hkb:'1', title:'Mitwirken und Unterstützen bei Gesundheits- und Körperpflege (2 von 6 werden gewählt)', items:[
+    {code:'1.1', label:'Unterstützt beim An- und Auskleiden.', topicId:'ankleiden'},
+    {code:'1.2', label:'Hilfestellung im Zusammenhang mit der Ausscheidung.', topicId:'ausscheidung'},
+    {code:'1.3', label:'Unterstützt bei der Durchführung der Körperpflege.', topicId:'koerperpflege'},
+    {code:'1.4', label:'Unterstützt bei prophylaktischen Massnahmen.', topicId:'prophylaxen'},
+    {code:'1.5', label:'Unterstützt Mobilisationen, Lagerungen, Transfers.', topicId:'mobilisation'},
+    {code:'1.6', label:'Gewichts-/Grössenkontrolle und Vitalzeichen.', topicId:'vitalzeichen'}
+  ]},
+  {hkb:'2', title:'Begleiten und Unterstützen im Alltag (2 von 6 werden gewählt)', items:[
+    {code:'2.1', label:'Wirkt bei der Tagesstruktur mit.', topicId:'tagesstruktur'},
+    {code:'2.2', label:'Wirkt bei der Aktivierung mit.', topicId:'aktivierung'},
+    {code:'2.3', label:'Begleitet zu Terminen.', topicId:'termine'},
+    {code:'2.4', label:'Unterstützt beim Essen und Trinken.', topicId:'essen_trinken'},
+    {code:'2.5', label:'Bereitet Frühstück/Zwischenmahlzeiten zu.', topicId:'zwischenmahlzeiten'},
+    {code:'2.7', label:'Vorbereitung beim Ruhen und Schlafen.', topicId:'ruhen_schlafen'}
+  ]},
+  {hkb:'3', title:'Unterstützen im Haushalt (1 von 4 wird gewählt)', items:[
+    {code:'3.1', label:'Vor- und Nachbereitung des Essraums.', topicId:'essraum'},
+    {code:'3.2', label:'Pflege von Wohnbereich, Pflanzen, Tieren.', topicId:'wohnbereich'},
+    {code:'3.3', label:'Unterstützt beim Einkauf.', topicId:'einkauf'},
+    {code:'3.4', label:'Unterstützt bei der Wäschepflege.', topicId:'waeschepflege'}
+  ]},
+  {hkb:'5', title:'Administration, Logistik, Arbeitsorganisation (1 von 3 wird gewählt)', items:[
+    {code:'5.1', label:'Führt einfache administrative Arbeiten durch.', topicId:'administrativ'},
+    {code:'5.3', label:'Reinigt Apparate und Mobiliar.', topicId:'apparate'},
+    {code:'5.4', label:'Wirkt bei der Materialbewirtschaftung mit.', topicId:'material'}
+  ]}
+];
+
+// Querschnittskompetenzen: kommen in praktisch jeder Prüfungssituation (v.a. schriftlich, BK) vor,
+// werden aber NIE für die IPA ausgewählt (deshalb separat von IPA_COMPETENCIES gehalten,
+// eigenes Feld topic.transComp statt topic.comp, eigene kleine Tabelle auf der Matrix-Seite).
+const TRANSVERSAL_COMPETENCIES = [
+  {code:'2.6', label:'Kommuniziert situationsgerecht.', topicId:'kommunikation'},
+  {code:'4.1', label:'Arbeitet rückenschonend/ergonomisch.', topicId:'ergonomie'},
+  {code:'4.2', label:'Setzt Hygienemassnahmen um.', topicId:'hygiene'},
+  {code:'4.3', label:'Sorgt für Arbeitssicherheit.', topicId:'arbeitssicherheit'},
+  {code:'5.2', label:'Dokumentiert sachgerecht.', topicId:'dokumentation'},
+  {code:'6.1', label:'Wahrt das Berufsgeheimnis.', topicId:'infoweitergabe'}
+];
+
+// Die 6 Denkebenen, nach denen die Prüfung eine Alltagssituation befragt.
+const LEVELS = [
+  {n:1, title:'Erkennen', question:'Was fällt auf?',
+    signals:['Was fällt Ihnen auf?','Was beobachten Sie?','Was stellen Sie fest?'],
+    example:'QV 2016, Teil 2 (Herr Liniger): „Die Haut an den Beinen ist marmoriert.“ – das ist die reine Beobachtung, die zuerst wahrgenommen werden muss, bevor irgendetwas unternommen wird.',
+    tip:'Übe, eine Situation zuerst nüchtern zu beschreiben – ohne schon zu werten oder zu handeln. Das Thema „Beobachtung" im Lernmodul trainiert genau das.'},
+  {n:2, title:'Wissen', question:'Wie heisst der Fachbegriff, welches Prinzip gilt?',
+    signals:['Wie heisst das Fachwort für…','Was ist die Fachbezeichnung?','Welches Prinzip gilt hier?'],
+    example:'QV 2018, Teil 1 (Herr Lang): Blutdruck 180/90 mmHg gemessen – „Wie heisst das Fachwort für diesen Blutdruckwert?“ (Antwort: Hypertonie).',
+    tip:'Fachbegriffe und Grundprinzipien (Hygiene, Ergonomie, Prophylaxen) auswendig können – ohne das passende Wort bleibt die richtige Beobachtung ungenutzt.'},
+  {n:3, title:'Handeln', question:'Was mache ich konkret?',
+    signals:['Beschreiben Sie…','Was machen Sie?','Nennen Sie … Massnahmen','Ich …'],
+    example:'QV 2019, Teil 2 (Herr Steiner): „Wie unterstützen Sie Herrn Steiner beim Anziehen?“ – erwartet werden konkrete, beobachtbare Handlungen in Ich-Form.',
+    tip:'Immer in ganzen „Ich …"-Sätzen antworten, mit konkreten, sichtbaren Handlungen – nicht nur mit einem Stichwort oder einer Haltung.'},
+  {n:4, title:'Begründen', question:'Warum mache ich es so?',
+    signals:['Begründen Sie…','Warum…','Weshalb…'],
+    example:'QV 2019, Teil 2 (Herr Steiner): Man lässt ihn die Kleider selbst anziehen – Begründung: „damit die Ressourcen/Autonomie erhalten und gefördert werden.“',
+    tip:'Die Begründung nennt immer einen Nutzen für die Klientin/den Klienten oder die Sicherheit – nie nur „weil man das so macht".'},
+  {n:5, title:'Abgrenzen', question:'Was liegt ausserhalb meiner Kompetenz und muss weitergegeben werden?',
+    signals:['Wer ist zuständig?','An wen wenden Sie sich?','Was tun Sie NICHT?'],
+    example:'QV 2019, Teil 1 (Frau Grosjean): Nur zu sagen „sie lässt sich nicht waschen“ reicht nicht – man muss den ganzen Gesundheitszustand der zuständigen Fachperson beschreiben, weil die Entscheidung über weitere Schritte nicht bei der AGS liegt.',
+    tip:'Wisse genau, was du selbstständig entscheiden darfst und wo du Fachpersonen beiziehen musst (z. B. bei Medikamenten, medizinischen Entscheiden).'},
+  {n:6, title:'Dokumentieren / Kommunizieren', question:'Wie gebe ich die Information korrekt weiter?',
+    signals:['Was schreiben Sie in die Pflegedokumentation?','Was melden Sie?','Wie geben Sie Rapport?'],
+    example:'QV 2018, Teil 1 (Herr Lang): Einträge werden als „Information“ oder „Interpretation“ geprüft – nur die reine Beobachtung gehört in die Dokumentation.',
+    tip:'Mündlich und schriftlich gilt dieselbe Regel: kurz, sachlich, ohne eigene Deutung, an die richtige Person.'}
+];
+
+// Ein ganz einfaches, alltagsnahes Beispiel zum Einstieg (bevor die 6 Ebenen im Detail kommen).
+const STORY_EXAMPLE = {
+  situation:'☕ Du sitzt mit einer Klientin beim Zvieri. Sie schüttet sich aus Versehen heissen Kaffee über die Hand.',
+  source:'Eine ganz ähnliche Situation kam schon in einer echten Prüfung vor (QV 2016, Teil 1).',
+  steps:[
+    {n:1, label:'1 · Erkennen', body:'Du siehst: Die Haut an der Hand wird sofort rot.'},
+    {n:2, label:'2 · Wissen', body:'Das nennt man eine <strong>Verbrennung</strong>.'},
+    {n:3, label:'3 · Handeln', body:'Du hältst die Hand sofort unter kaltes, fliessendes Wasser.'},
+    {n:4, label:'4 · Begründen', body:'Warum? Kaltes Wasser kühlt die Haut, lindert den Schmerz und verhindert, dass die Verbrennung schlimmer wird.'},
+    {n:5, label:'5 · Abgrenzen', body:'Bildet sich eine Blase oder ist die Stelle gross? Dann rufst du eine Pflegefachperson oder den Arzt – das behandelst du nicht allein.'},
+    {n:6, label:'6 · Dokumentieren', body:'Du schreibst auf, was passiert ist und was du gemacht hast, und sagst es deinem Team.'}
+  ]
+};
+
+// Karteikarten-Sammlung: die 5 häufigsten Signalwörter der Prüfung, auf einen Blick.
+const FRAGETYP_KARTEN = [
+  {emoji:'🟦', color:'#3B7EA1', title:'FRAGETYP 1 – „Nennen Sie …“', action:'Stichworte, keine lange Erklärung.'},
+  {emoji:'🟩', color:'#5C8A6B', title:'FRAGETYP 2 – „Beschreiben Sie …“', action:'Handlung in sinnvoller Reihenfolge.'},
+  {emoji:'🟨', color:'#B8862E', title:'FRAGETYP 3 – „Begründen Sie …“', action:'„Ich mache X, weil …“'},
+  {emoji:'🟧', color:'#C97A3D', title:'FRAGETYP 4 – „Was beobachten Sie?“', action:'Nur Wahrnehmbares nennen, keine Diagnose.'},
+  {emoji:'🟥', color:'#B5544B', title:'FRAGETYP 5 – „Was tun Sie?“', action:'Konkrete Handlung + gegebenenfalls Fachperson informieren.'}
+];
+
+let tipOpenSection = null;
+
+const WORKED_EXAMPLE = {
+  title:'Ein Beispiel, das alle 6 Ebenen zeigt',
+  situation:'QV 2018, Teil 1 – Herr Lang (64), fünf Tage nach einer Unterschenkel-Operation, geht heute nach Hause.',
+  rows:[
+    {level:1, aufgabe:'Aufgabe 16', beschreibung:'Prüfen, ob ein Dokumentationseintrag eine reine Information oder bereits eine Interpretation ist.'},
+    {level:2, aufgabe:'Aufgabe 1b', beschreibung:'Das Fachwort für den gemessenen Blutdruckwert (180/90 mmHg) nennen: Hypertonie.'},
+    {level:3, aufgabe:'Aufgabe 9', beschreibung:'Den Toilettenaufsatz nach Gebrauch konkret reinigen und desinfizieren.'},
+    {level:4, aufgabe:'Aufgabe 14b', beschreibung:'Begründen, weshalb der Nachttisch nach jedem Austritt kontrolliert und desinfiziert wird.'},
+    {level:5, aufgabe:'Aufgabe 12', beschreibung:'Entscheiden, welche Informationen unbedingt an die zuständige Fachperson weitergeleitet werden müssen.'},
+    {level:6, aufgabe:'Aufgabe 15', beschreibung:'Begründen, weshalb die Pflegedokumentation überhaupt geführt wird.'}
+  ]
+};
+
+/* ---------------------------------------------------------
+   STATE
+--------------------------------------------------------- */
+const allTopics = [...topicsA, ...topicsB, ...topicsIPA, ...topicsBerufsrolle];
+const state = {
+  view:'overview', // 'overview' | 'topic'
+  topicId:null,
+  qIndex:0,
+  progress:{} // id -> {answered:Set, total:n}
+};
+allTopics.forEach(t=>{ state.progress[t.id] = {answered:new Set(), total:t.questions.length}; });
+
+const answerState = {}; // per question temp UI state, keyed by topicId+qIndex
+
+/* ---------------------------------------------------------
+   RENDER
+--------------------------------------------------------- */
+const app = document.getElementById('app');
+
+function iconFor(type){
+  if(type==='mc') return '✓';
+  if(type==='tf') return '↺';
+  if(type==='beob') return '👁';
+  if(type==='frei') return '✎';
+  if(type==='multitf') return '☑';
+  if(type==='matchmulti') return '🔗';
+  return '?';
+}
+function labelFor(type){
+  if(type==='mc') return 'Richtigen Eintrag auswählen';
+  if(type==='tf') return 'Richtig oder falsch – korrigieren';
+  if(type==='beob') return 'Beobachtung oder Interpretation?';
+  if(type==='frei') return 'Eigene Antwort formulieren';
+  if(type==='multitf') return 'Tue ich / tue ich nicht – mehrere Aussagen';
+  if(type==='matchmulti') return 'Begriffen zuordnen';
+  return '';
+}
+
+function topicDone(t){
+  const p = state.progress[t.id];
+  return p.answered.size >= p.total;
+}
+function topicPartial(t){
+  const p = state.progress[t.id];
+  return p.answered.size > 0 && p.answered.size < p.total;
+}
+
+function renderOverview(){
+  const doneCount = allTopics.filter(topicDone).length;
+  document.getElementById('overallBar').style.width = Math.round(100*doneCount/allTopics.length)+'%';
+  document.getElementById('overallNote').textContent = doneCount+' von '+allTopics.length+' Themen geübt';
+
+  let html = '';
+  html += `<div class="legend">
+    <span class="A">A – Muss sitzen</span>
+    <span class="B">B – Sehr wahrscheinlich</span>
+    <span class="C">C – Ergänzung</span>
+    <span class="IPA">IPA – Praxisprüfung</span>
+  </div>`;
+
+  html += `<button class="tips-entry" onclick="openTips()">
+    <div class="tleft">
+      <div class="ttitle">📘 Lerntipps: Wie die Prüfung "denkt"</div>
+      <div class="tmeta">Die immer gleiche Logik hinter den Aufgaben verstehen – 6 Ebenen, an einem echten Beispiel erklärt</div>
+    </div>
+    <div class="arrow">→</div>
+  </button>`;
+
+  html += `<button class="matrix-entry" onclick="openMatrix()">
+    <div class="tleft">
+      <div class="ttitle">📊 Kompetenz-Ebenen-Matrix</div>
+      <div class="tmeta">Welche der 6 Denkebenen ist zu welcher Prüfungskompetenz schon geübt? Wird laufend aktualisiert.</div>
+    </div>
+    <div class="arrow">→</div>
+  </button>`;
+
+  html += `<div class="howto">
+    <h3>So erkennst du die Aufgabentypen</h3>
+    <div class="howto-grid">
+      <div class="howto-item"><div class="howto-icon">✓</div><div>Richtigen Eintrag auswählen – eine von mehreren Antworten stimmt.</div></div>
+      <div class="howto-item"><div class="howto-icon">↺</div><div>Richtig/falsch – bei falsch zeigen wir dir gleich die Korrektur.</div></div>
+      <div class="howto-item"><div class="howto-icon">👁</div><div>Beobachtung oder Interpretation – reiner Fakt oder eigene Deutung?</div></div>
+      <div class="howto-item"><div class="howto-icon">✎</div><div>Eigene Antwort formulieren – du schreibst, wir zeigen eine Musterantwort.</div></div>
+    </div>
+  </div>`;
+
+  html += renderSection('A', topicsA);
+  html += renderSection('B', [...topicsB, ...topicsBerufsrolle]);
+
+  html += `<div class="section-title"><span class="dot" style="background:var(--c)"></span>${PRIORITY_INFO.C.label}</div>
+  <p class="section-desc">${PRIORITY_INFO.C.desc}</p>
+  <div class="c-list">`;
+  topicsC.forEach(t=>{
+    html += `<div class="c-item"><div class="ttitle">${t.title}</div><div class="tdesc">${t.desc}</div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="section-title"><span class="dot" style="background:var(--ipa)"></span>IPA – Praxisprüfung</div>
+  <p class="section-desc">Für die praktische Prüfung wählt die vorgesetzte Fachkraft 6 dieser Kompetenzen aus (je 2 aus Bereich 1+2, je 1 aus Bereich 3+5). Diese Übungen decken alle wählbaren Kompetenzen ab.</p>
+  <div class="topic-grid">`;
+  topicsIPA.forEach(t=>{
+    const p = state.progress[t.id];
+    let checkClass = '', checkContent='';
+    if(topicDone(t)){ checkClass='done'; checkContent='✓'; }
+    else if(topicPartial(t)){ checkClass='partial'; checkContent=p.answered.size+'/'+p.total; }
+    html += `<button class="topic-card" id="card-${t.id}">
+      <div class="tleft">
+        <div class="ttitle">${t.title} <span style="color:var(--ipa); font-weight:600;">· K ${t.comp}</span></div>
+        <div class="tmeta">${t.questions.length} Aufgaben</div>
+      </div>
+      <div class="check ${checkClass}">${checkContent}</div>
+    </button>`;
+  });
+  html += `</div>`;
+
+  html += renderCompetencyChecklist();
+
+  app.innerHTML = html;
+
+  allTopics.forEach(t=>{
+    const el = document.getElementById('card-'+t.id);
+    if(el) el.addEventListener('click', ()=> openTopic(t.id));
+  });
+  document.querySelectorAll('.comp-goto').forEach(btn=>{
+    btn.addEventListener('click', ()=> openTopic(btn.dataset.topic));
+  });
+}
+
+function renderCompetencyChecklist(){
+  let html = `<div class="section-title" style="margin-top:36px;"><span class="dot" style="background:var(--ipa)"></span>Kompetenzen-Checkliste (IPA)</div>
+  <p class="section-desc">Alle 19 Handlungskompetenzen, aus denen deine 6 Prüfungskompetenzen ausgewählt werden. Zu jeder gibt es hier eine passende Übung.</p>
+  <table class="comp-table"><thead><tr><th>Code</th><th>Kompetenz</th><th class="comp-status">Geübt</th><th></th></tr></thead><tbody>`;
+  IPA_COMPETENCIES.forEach(group=>{
+    html += `<tr class="comp-hkb-row"><td colspan="4">Handlungskompetenzbereich ${group.hkb} — ${group.title}</td></tr>`;
+    group.items.forEach(item=>{
+      const topic = getTopic(item.topicId);
+      const p = topic ? state.progress[item.topicId] : null;
+      const done = p && p.answered.size >= p.total;
+      html += `<tr>
+        <td class="comp-code">${item.code}</td>
+        <td>${item.label}</td>
+        <td class="comp-status"><span class="comp-check ${done?'ok':'open'}">${done?'✓':'○'}</span></td>
+        <td><button class="comp-goto" data-topic="${item.topicId}">Üben</button></td>
+      </tr>`;
+    });
+  });
+  html += `</tbody></table>
+  <p class="comp-note">Alle 19 Kompetenzen sind mit mindestens einer Übung hinterlegt — egal welche 6 deine vorgesetzte Fachkraft für deine IPA auswählt, du hast dazu passendes Material.</p>`;
+  return html;
+}
+
+function renderSection(letter, list){
+  const color = letter==='A' ? 'var(--a)' : 'var(--b)';
+  let html = `<div class="section-title"><span class="dot" style="background:${color}"></span>${PRIORITY_INFO[letter].label}</div>
+  <p class="section-desc">${PRIORITY_INFO[letter].desc}</p>
+  <div class="topic-grid">`;
+  list.forEach(t=>{
+    const p = state.progress[t.id];
+    let checkClass = '', checkContent='';
+    if(topicDone(t)){ checkClass='done'; checkContent='✓'; }
+    else if(topicPartial(t)){ checkClass='partial'; checkContent=p.answered.size+'/'+p.total; }
+    html += `<button class="topic-card" id="card-${t.id}">
+      <div class="tleft">
+        <div class="ttitle">${t.title}</div>
+        <div class="tmeta">${t.questions.length} Aufgaben</div>
+      </div>
+      <div class="check ${checkClass}">${checkContent}</div>
+    </button>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function openTopic(id){
+  state.topicId = id;
+  state.qIndex = 0;
+  state.view = 'topic-intro';
+  renderTopic();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function getTopic(id){ return allTopics.find(t=>t.id===id); }
+
+function renderTopic(){
+  const t = getTopic(state.topicId);
+  if(!t) return renderOverview();
+
+  if(state.view === 'topic-intro'){
+    let html = `<button class="backbtn" onclick="goOverview()">← Übersicht</button>`;
+    const prioLabel = t.priority==='A' ? 'Muss sitzen' : (t.priority==='B' ? 'Sehr wahrscheinlich' : 'Praxis (IPA) · Kompetenz '+t.comp);
+    html += `<span class="badge ${t.priority}">${prioLabel}</span>`;
+    html += `<h2 class="topic-title">${t.title}</h2>`;
+    html += `<div class="explain-card"><ul>`;
+    t.intro.forEach(line=>{ html += `<li>${line}</li>`; });
+    html += `</ul></div>`;
+    html += `<button class="startbtn" onclick="startQuestions()">Aufgaben starten (${t.questions.length})</button>`;
+    app.innerHTML = html;
+    return;
+  }
+
+  if(state.view === 'topic-done'){
+    let html = `<button class="backbtn" onclick="goOverview()">← Übersicht</button>`;
+    html += `<div class="done-screen">
+      <div class="big-check">✓</div>
+      <h2>Gut gemacht!</h2>
+      <p>Du hast alle Aufgaben zu „${t.title}“ durchgearbeitet.</p>
+      <button class="primary-btn" onclick="goOverview()">Zur Übersicht</button>
+    </div>`;
+    app.innerHTML = html;
+    return;
+  }
+
+  // question view
+  const q = t.questions[state.qIndex];
+  const key = t.id+'-'+state.qIndex;
+  if(!answerState[key]) answerState[key] = (q.type==='multitf' || q.type==='matchmulti')
+    ? {answered:false, rows:q.rows.map(()=>({selected:null}))}
+    : {answered:false, selected:null};
+
+  let html = `<button class="backbtn" onclick="goOverview()">← Übersicht</button>`;
+  html += `<span class="badge ${t.priority}">${t.title}</span>`;
+  html += `<div class="qwrap">`;
+  html += `<div class="qprogress"><span>Frage ${state.qIndex+1} von ${t.questions.length}</span></div>`;
+  html += `<div class="qtype-tag">${iconFor(q.type)} ${labelFor(q.type)}</div>`;
+  if(q.context) html += `<div class="qcontext">${q.context}</div>`;
+
+  if(q.type==='mc'){
+    html += renderMC(t, q, key);
+  } else if(q.type==='tf'){
+    html += renderTF(t, q, key);
+  } else if(q.type==='beob'){
+    html += renderBeob(t, q, key);
+  } else if(q.type==='frei'){
+    html += renderFrei(t, q, key);
+  } else if(q.type==='multitf'){
+    html += renderMultiTF(t, q, key);
+  } else if(q.type==='matchmulti'){
+    html += renderMatchMulti(t, q, key);
+  }
+
+  html += `</div>`; // qwrap
+
+  html += `<div class="qnav">
+    <button class="ghost-btn" onclick="prevQuestion()" ${state.qIndex===0?'disabled style="visibility:hidden"':''}>Zurück</button>
+    <button class="primary-btn" id="nextBtn" onclick="nextQuestion()" ${answerState[key].answered?'':'style="display:none"'}>
+      ${state.qIndex === t.questions.length-1 ? 'Fertig' : 'Weiter'}
+    </button>
+  </div>`;
+
+  app.innerHTML = html;
+}
+
+function renderMC(t,q,key){
+  const st = answerState[key];
+  let html = `<div class="qprompt">${q.prompt}</div><div class="options">`;
+  q.options.forEach((opt,i)=>{
+    let cls='opt';
+    if(st.answered){
+      if(i===q.correct) cls+=' correct';
+      else if(i===st.selected) cls+=' wrong';
+    }
+    html += `<button class="${cls}" ${st.answered?'disabled':''} onclick="answerMC('${key}',${i})">${opt}</button>`;
+  });
+  html += `</div>`;
+  if(st.answered){
+    const good = st.selected===q.correct;
+    html += `<div class="feedback ${good?'good':'gentle'}"><strong>${good?'Genau richtig.':'Nicht ganz – so ist es richtig:'}</strong>${q.explain}</div>`;
+  }
+  return html;
+}
+
+function renderTF(t,q,key){
+  const st = answerState[key];
+  let html = `<div class="qprompt">${q.prompt}</div>`;
+  html += `<div class="tfbtns">
+    <button ${st.answered?'disabled':''} class="${st.answered ? (q.correct===true?'correct':(st.selected===true?'wrong':'')) : ''}" onclick="answerTF('${key}',true)">Richtig</button>
+    <button ${st.answered?'disabled':''} class="${st.answered ? (q.correct===false?'correct':(st.selected===false?'wrong':'')) : ''}" onclick="answerTF('${key}',false)">Falsch</button>
+  </div>`;
+  if(st.answered){
+    const good = st.selected===q.correct;
+    let msg = good ? (q.correct? q.explainTrue : q.explainFalse) : (q.correct ? q.explainTrue : ('Nicht ganz. '+q.correction));
+    if(good && !msg) msg = 'Genau, das hast du richtig eingeschätzt.';
+    html += `<div class="feedback ${good?'good':'gentle'}"><strong>${good?'Richtig erkannt.':'Nicht ganz.'}</strong>${msg}</div>`;
+  }
+  return html;
+}
+
+function renderBeob(t,q,key){
+  const st = answerState[key];
+  let html = `<div class="qprompt">${q.statement}</div>`;
+  html += `<div class="zuordnen-row">
+    <button class="opt ${st.answered ? (q.correct==='beobachtung'?'correct':(st.selected==='beobachtung'?'wrong':'')) : ''}" ${st.answered?'disabled':''} onclick="answerBeob('${key}','beobachtung')">Beobachtung</button>
+    <button class="opt ${st.answered ? (q.correct==='interpretation'?'correct':(st.selected==='interpretation'?'wrong':'')) : ''}" ${st.answered?'disabled':''} onclick="answerBeob('${key}','interpretation')">Interpretation</button>
+  </div>`;
+  if(st.answered){
+    const good = st.selected===q.correct;
+    html += `<div class="feedback ${good?'good':'gentle'}"><strong>${good?'Genau richtig.':'Nicht ganz – so ist es gemeint:'}</strong>${q.explain}</div>`;
+  }
+  return html;
+}
+
+function renderFrei(t,q,key){
+  const st = answerState[key];
+  let html = `<div class="qprompt">${q.prompt}</div>`;
+  html += `<textarea id="ta-${key}" placeholder="Schreibe hier deine Antwort..." ${st.answered?'disabled':''}>${st.text||''}</textarea>`;
+  if(!st.answered){
+    html += `<div style="margin-top:10px;"><button class="ghost-btn" onclick="showModel('${key}')">Musterantwort zeigen</button></div>`;
+  } else {
+    html += `<div class="modelanswer"><strong>Musterantwort</strong>${q.model}</div>`;
+    html += `<div class="selfrate">
+      <span style="align-self:center; font-size:0.85rem; color:var(--ink-soft);">Wie war das für dich?</span>
+      <button class="${st.rating==='good'?'active-good':''}" onclick="rateSelf('${key}','good')">Das sass gut 👍</button>
+      <button class="${st.rating==='practice'?'active-practice':''}" onclick="rateSelf('${key}','practice')">Muss ich noch üben</button>
+    </div>`;
+  }
+  return html;
+}
+
+function renderMultiTF(t,q,key){
+  const st = answerState[key];
+  const labels = q.labels || ['Tue ich','Tue ich nicht'];
+  const doneCount = st.rows.filter(r=>r.selected!==null).length;
+  let html = `<div class="qprompt">${q.prompt}</div>`;
+  html += `<div class="multitf-progress">${doneCount} von ${q.rows.length} Aussagen beurteilt</div>`;
+  q.rows.forEach((row,i)=>{
+    const sel = st.rows[i].selected;
+    const done = sel !== null;
+    html += `<div class="multitf-row">
+      <div class="multitf-statement">${row.statement}</div>
+      <div class="tfbtns">
+        <button ${done?'disabled':''} class="${done ? (row.correct===true?'correct':(sel===true?'wrong':'')) : ''}" onclick="answerMultiRow('${key}',${i},true)">${labels[0]}</button>
+        <button ${done?'disabled':''} class="${done ? (row.correct===false?'correct':(sel===false?'wrong':'')) : ''}" onclick="answerMultiRow('${key}',${i},false)">${labels[1]}</button>
+      </div>
+      ${done && row.reason ? `<div class="multitf-reason"><strong>${sel===row.correct?'Richtig eingeschätzt.':'Nicht ganz.'}</strong> ${row.reason}</div>` : ''}
+    </div>`;
+  });
+  if(st.answered){
+    html += `<div class="feedback good"><strong>Alle Aussagen beurteilt.</strong> Vergleiche deine Einschätzungen oben mit den Begründungen.</div>`;
+  }
+  return html;
+}
+
+function renderMatchMulti(t,q,key){
+  const st = answerState[key];
+  const doneCount = st.rows.filter(r=>r.selected!==null).length;
+  let html = `<div class="qprompt">${q.prompt}</div>`;
+  html += `<div class="multitf-progress">${doneCount} von ${q.rows.length} zugeordnet</div>`;
+  q.rows.forEach((row,i)=>{
+    const sel = st.rows[i].selected;
+    const done = sel !== null;
+    html += `<div class="matchmulti-row">
+      <div class="matchmulti-statement">${row.statement}</div>
+      <div class="matchmulti-options">`;
+    q.categories.forEach(cat=>{
+      let cls='';
+      if(done){
+        if(cat===row.category) cls='correct';
+        else if(cat===sel) cls='wrong';
+      }
+      html += `<button class="${cls}" ${done?'disabled':''} onclick="answerMatchRow('${key}',${i},${JSON.stringify(cat)})">${cat}</button>`;
+    });
+    html += `</div></div>`;
+  });
+  if(st.answered){
+    html += `<div class="feedback good"><strong>Alle Zuordnungen gemacht.</strong> Die richtige Zuordnung ist jeweils grün markiert.</div>`;
+  }
+  return html;
+}
+
+/* ---------------------------------------------------------
+   INTERACTIONS
+--------------------------------------------------------- */
+function markAnswered(topicId, qIndex){
+  state.progress[topicId].answered.add(qIndex);
+}
+
+window.answerMC = function(key, i){
+  answerState[key].answered = true;
+  answerState[key].selected = i;
+  const [topicId, qIndex] = splitKey(key);
+  markAnswered(topicId, parseInt(qIndex));
+  renderTopic();
+};
+window.answerTF = function(key, val){
+  answerState[key].answered = true;
+  answerState[key].selected = val;
+  const [topicId, qIndex] = splitKey(key);
+  markAnswered(topicId, parseInt(qIndex));
+  renderTopic();
+};
+window.answerBeob = function(key, val){
+  answerState[key].answered = true;
+  answerState[key].selected = val;
+  const [topicId, qIndex] = splitKey(key);
+  markAnswered(topicId, parseInt(qIndex));
+  renderTopic();
+};
+window.answerMultiRow = function(key, i, val){
+  const st = answerState[key];
+  st.rows[i].selected = val;
+  const allDone = st.rows.every(r=>r.selected!==null);
+  if(allDone && !st.answered){
+    st.answered = true;
+    const [topicId, qIndex] = splitKey(key);
+    markAnswered(topicId, parseInt(qIndex));
+  }
+  renderTopic();
+};
+window.answerMatchRow = function(key, i, cat){
+  const st = answerState[key];
+  st.rows[i].selected = cat;
+  const allDone = st.rows.every(r=>r.selected!==null);
+  if(allDone && !st.answered){
+    st.answered = true;
+    const [topicId, qIndex] = splitKey(key);
+    markAnswered(topicId, parseInt(qIndex));
+  }
+  renderTopic();
+};
+window.showModel = function(key){
+  const ta = document.getElementById('ta-'+key);
+  answerState[key].text = ta ? ta.value : '';
+  answerState[key].answered = true;
+  const [topicId, qIndex] = splitKey(key);
+  markAnswered(topicId, parseInt(qIndex));
+  renderTopic();
+};
+window.rateSelf = function(key, val){
+  answerState[key].rating = val;
+  renderTopic();
+};
+
+function splitKey(key){
+  const idx = key.lastIndexOf('-');
+  return [key.substring(0,idx), key.substring(idx+1)];
+}
+
+window.startQuestions = function(){
+  state.view = 'question';
+  state.qIndex = 0;
+  renderTopic();
+};
+
+window.nextQuestion = function(){
+  const t = getTopic(state.topicId);
+  if(state.qIndex < t.questions.length-1){
+    state.qIndex++;
+    state.view='question';
+    renderTopic();
+  } else {
+    state.view = 'topic-done';
+    renderTopic();
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+window.prevQuestion = function(){
+  if(state.qIndex>0){
+    state.qIndex--;
+    renderTopic();
+  }
+};
+
+function renderTips(){
+  let html = `<button class="backbtn" onclick="goOverview()">← Übersicht</button>`;
+  html += `<h2 class="topic-title">Wie die Prüfung "denkt"</h2>`;
+  html += `<div class="explain-card">
+    <p>Fast jede Prüfungsaufgabe nimmt eine ganz normale Alltagssituation – eine Klientin, ein Klient, eine Pflegesituation – und stellt dazu mehrere Fragen. Diese Fragen sind fast nie zufällig, sondern folgen immer denselben 6 Ebenen. Wenn du diese Ebenen erkennst, weisst du sofort, welche Art von Antwort erwartet wird.</p>
+  </div>`;
+
+  html += `<div class="story-wrap">
+    <div class="story-situation">${STORY_EXAMPLE.situation}</div>`;
+  STORY_EXAMPLE.steps.forEach((s,i)=>{
+    html += `<div class="story-step">
+      <div class="snum">${s.n}</div>
+      <div class="stext"><div class="slabel">${s.label}</div><div class="sbody">${s.body}</div></div>
+    </div>`;
+    if(i < STORY_EXAMPLE.steps.length-1) html += `<div class="story-connector"></div>`;
+  });
+  html += `<p class="comp-note" style="margin-top:6px;">${STORY_EXAMPLE.source}</p></div>`;
+
+  html += `<p class="section-desc" style="margin-top:8px; margin-bottom:16px;">Und genau dieselben 6 Ebenen stecken auch in den Fachaufgaben der Prüfung. Klicke die Themen unten einzeln auf – so hast du alles auf einen Blick, ohne endlos zu scrollen:</p>`;
+
+  // --- Akkordeon-Abschnitte ---
+  let body1 = `<p class="section-desc" style="margin-top:0;">Jede Ebene nochmals einzeln erklärt, mit Signalwörtern und echtem Beispiel:</p>`;
+  LEVELS.forEach(l=>{
+    body1 += `<div class="level-card">
+      <div class="level-num">${l.n}</div>
+      <div class="level-body">
+        <div class="level-title">${l.title}</div>
+        <div class="level-question">${l.question}</div>
+        <div class="level-signals">${l.signals.map(s=>`<span class="signal-tag">${s}</span>`).join('')}</div>
+        <div class="level-example"><strong>Echtes Beispiel:</strong> ${l.example}</div>
+        <div class="level-tip"><strong>Trainingstipp:</strong> ${l.tip}</div>
+      </div>
+    </div>`;
+  });
+  html += renderAccordionSection('levels', 'Die 6 Ebenen im Detail', 'var(--teal)', body1);
+
+  let body2 = `<p class="section-desc" style="margin-top:0;">${WORKED_EXAMPLE.situation}</p>
+  <table class="worked-table"><thead><tr><th>Ebene</th><th>Original-Aufgabe</th><th>Was gefragt wird</th></tr></thead><tbody>`;
+  WORKED_EXAMPLE.rows.forEach(r=>{
+    const lvl = LEVELS.find(l=>l.n===r.level);
+    body2 += `<tr>
+      <td><div class="wnum">${r.level}</div></td>
+      <td>${lvl.title}<br><span style="color:var(--ink-soft); font-size:0.8rem;">${r.aufgabe}</span></td>
+      <td>${r.beschreibung}</td>
+    </tr>`;
+  });
+  body2 += `</tbody></table>
+  <p class="comp-note">Das Wichtige daran: Es ist dieselbe Situation (Herr Lang), aber je nach Ebene wird eine ganz andere Art von Antwort erwartet.</p>`;
+  html += renderAccordionSection('worked', WORKED_EXAMPLE.title, 'var(--teal)', body2);
+
+  let body3 = `<div class="explain-card" style="margin-top:0;">
+    <ul>
+      <li>Bei „Nennen Sie drei …“: genau drei starke Antworten geben – nicht zehn Dinge hinschreiben.</li>
+      <li>Bei „Beschreiben Sie …“: eine konkrete Handlung formulieren, nicht nur ein Schlagwort.</li>
+      <li>Bei „Begründen Sie …“: Ursache und Wirkung nennen – Massnahme → fachlicher Grund.</li>
+      <li>Bei „richtig/falsch“: jede Aussage einzeln fachlich prüfen, auch wenn mehrere ähnlich klingen.</li>
+      <li>Bei Dokumentation: strikt zwischen beobachtbarer Information und eigener Interpretation unterscheiden.</li>
+      <li>Bei Situationen mit Einschränkungen: immer Ressourcen, Sicherheit und Selbstbestimmung gleichzeitig berücksichtigen.</li>
+      <li>Bei auffälligen Beobachtungen: nicht selbst diagnostizieren, sondern korrekt beobachten und die zuständige Fachperson informieren.</li>
+    </ul>
+  </div>`;
+  html += renderAccordionSection('technik', 'Besonders wichtige Prüfungstechniken', 'var(--a)', body3);
+
+  let bodyKarten = `<p class="section-desc" style="margin-top:0;">Die 5 häufigsten Signalwörter – auf einen Blick, wie Karteikarten. Bei jeder Aufgabe zuerst das Signalwort suchen, dann die passende Karte anwenden.</p>
+  <div class="karten-grid">`;
+  FRAGETYP_KARTEN.forEach(k=>{
+    bodyKarten += `<div class="karte" style="--k-color:${k.color};">
+      <div class="karte-title"><span class="karte-emoji">${k.emoji}</span>${k.title}</div>
+      <div class="karte-sub">Was tun?</div>
+      <div class="karte-action">→ ${k.action}</div>
+    </div>`;
+  });
+  bodyKarten += `</div>`;
+  html += renderAccordionSection('karten', 'Karteikarten-Sammlung: 5 Fragetypen auf einen Blick', 'var(--gentle)', bodyKarten);
+
+  let body4 = `<div class="explain-card" style="margin-top:0;">
+    <p><strong>2018 – die Prüfung ist breit gefächert.</strong> Innerhalb eines einzigen Prüfungsteils werden Vitalzeichen, Anatomie, Prophylaxe, Mobilisation, Hygiene, Privatsphäre, Kommunikation, Materialbestellung, Dokumentation und Stressbewältigung abgefragt – nacheinander, in derselben Situation. Das spricht dafür, den Lernstoff nach Handlungskompetenzen zu ordnen statt nach einzelnen Krankheitsbildern – genau das machen die Themen-Kacheln in diesem Lernmodul.</p>
+    <p><strong>2019 – dasselbe Grundprinzip, bestätigt.</strong> In Teil 2 wird die Pflegedokumentation zum Beispiel anhand konkreter Einträge geprüft: Du musst entscheiden, ob ein Eintrag korrekt ist, und das begründen. Beide Jahrgänge nennen zudem ausdrücklich, wie viele Antworten verlangt sind – zusätzliche, überzählige Antworten bringen keine Extrapunkte, sie werden einfach nicht bewertet.</p>
+  </div>`;
+  html += renderAccordionSection('jahre', 'Was die echten Prüfungen 2018 und 2019 zusätzlich zeigen', 'var(--b)', body4);
+
+  let body5 = `<div class="explain-card" style="margin-top:0;">
+    <p><span class="badge A" style="margin-right:6px;">A</span>Hygiene, Körperpflege/Intimsphäre, Mobilisation/Sicherheit, Beobachtung/Weitergabe, Dokumentation.</p>
+    <p><span class="badge B" style="margin-right:6px;">B</span>Flüssigkeit/Ausscheidung, Prophylaxen, Kommunikation/Haltung, Ergonomie/Arbeitssicherheit.</p>
+    <p><span class="badge C" style="margin-right:6px;">C</span>Anatomie/Fachbegriffe, Berechnungen, Aktivierung und Alltagsorganisation.</p>
+    <p style="margin-top:10px;"><strong>Nicht separat lernen:</strong> Themen werden in der Prüfung immer miteinander kombiniert. Das ist auch der Grund, warum viele Übungen in diesem Lernmodul mehrere Themen in einer Situation verbinden, statt sie künstlich zu trennen.</p>
+  </div>`;
+  html += renderAccordionSection('prioritaeten', 'Vorläufige Prioritäten für die weitere Auswertung', 'var(--c)', body5);
+
+  let body6 = `<div class="strategy-box" style="margin-top:0;">
+    <ol>
+      <li><strong>Lies die Situation zweimal.</strong> Wer ist die Person, was ist gerade passiert?</li>
+      <li><strong>Suche das Signalwort</strong> in der Aufgabe (z. B. „Begründen Sie“, „Nennen Sie“, „Was tun Sie“).</li>
+      <li><strong>Ordne es einer der 6 Ebenen zu</strong> – das sagt dir, was für eine Antwort erwartet wird.</li>
+      <li><strong>Antworte nur auf dieser Ebene.</strong> Bei „Begründen Sie“ reicht keine blosse Handlung, bei „Beschreiben Sie“ reicht kein Prinzip ohne konkrete Handlung.</li>
+      <li><strong>Bei Unsicherheit:</strong> lieber knapp und konkret antworten als gar nichts hinschreiben – Teilpunkte gibt es oft auch für unvollständige, aber richtige Ansätze.</li>
+    </ol>
+  </div>`;
+  html += renderAccordionSection('strategie', 'Wenn du bei einer Aufgabe nicht weiterweisst', 'var(--b)', body6);
+
+  app.innerHTML = html;
+}
+
+function renderAccordionSection(id, title, colorVar, bodyHtml){
+  const isOpen = tipOpenSection === id;
+  return `<div class="accordion-item">
+    <button class="accordion-header" onclick="toggleTipSection('${id}')">
+      <span class="accordion-title"><span class="dot" style="background:${colorVar}"></span>${title}</span>
+      <span class="accordion-chevron ${isOpen?'open':''}">▾</span>
+    </button>
+    <div class="accordion-body" style="display:${isOpen?'block':'none'};">${bodyHtml}</div>
+  </div>`;
+}
+
+window.toggleTipSection = function(id){
+  tipOpenSection = (tipOpenSection === id) ? null : id;
+  renderTips();
+};
+
+function renderMatrix(){
+  let html = `<button class="backbtn" onclick="goOverview()">← Übersicht</button>`;
+  html += `<h2 class="topic-title">Kompetenz-Ebenen-Matrix</h2>`;
+  html += `<div class="explain-card">
+    <p>Diese Tabelle zeigt für jede der 19 Kompetenzen aus der IPA-Übersicht, welche der 6 Denkebenen (siehe "Lerntipps") in dieser Version des Lernmoduls bereits mit mindestens einer Aufgabe abgedeckt ist. Sie berechnet sich automatisch aus den vorhandenen Übungen – sobald neue Aufgaben mit einer Ebene ergänzt werden, aktualisiert sich diese Übersicht von selbst.</p>
+  </div>`;
+
+  const levelCols = LEVELS; // 6 Ebenen, in fester Reihenfolge
+
+  html += `<div class="matrix-legend">
+    <span><span class="cell-ok">✓</span> mindestens eine Aufgabe auf dieser Ebene vorhanden</span>
+    <span><span class="cell-gap">–</span> noch keine Aufgabe auf dieser Ebene → hier zuerst neue Übungen ergänzen</span>
+  </div>`;
+  html += `<p class="comp-note" style="margin-top:-4px;">Achtung, Unterschied: "Aufgaben total" zählt alle Übungen einer Kompetenz. Die Häkchen zählen, wie viele <em>verschiedene</em> Denkebenen abgedeckt sind – zwei Übungen können zufällig dieselbe Ebene haben. Deshalb kann "Aufgaben total" höher sein als die Anzahl Häkchen in dieser Zeile.</p>`;
+
+  html += `<div class="matrix-scroll"><table class="matrix-table"><thead><tr>
+    <th class="rowhead">Kompetenz</th>
+    ${levelCols.map(l=>`<th>${l.n}<br>${l.title}</th>`).join('')}
+    <th>Aufgaben<br>total</th>
+  </tr></thead><tbody>`;
+
+  // Spalten-Zähler für die Gesamtzeile
+  const colCovered = levelCols.map(()=>0);
+  let totalRows = 0;
+
+  IPA_COMPETENCIES.forEach(group=>{
+    html += `<tr class="matrix-hkb-row"><td colspan="${levelCols.length+2}">Handlungskompetenzbereich ${group.hkb}</td></tr>`;
+    group.items.forEach(item=>{
+      const topic = getTopic(item.topicId);
+      const levelsPresent = new Set((topic ? topic.questions : []).map(q=>q.level).filter(Boolean));
+      totalRows++;
+      html += `<tr>
+        <td class="rowhead"><span class="matrix-code">${item.code}</span> <span class="matrix-label">${item.label}</span></td>
+        ${levelCols.map((l,i)=>{
+          const ok = levelsPresent.has(l.n);
+          if(ok) colCovered[i]++;
+          return `<td>${ok?'<span class="cell-ok">✓</span>':'<span class="cell-gap">–</span>'}</td>`;
+        }).join('')}
+        <td>${topic ? topic.questions.length : 0}</td>
+      </tr>`;
+    });
+  });
+
+  html += `<tr class="matrix-total-row">
+    <td class="rowhead">Abgedeckt von ${totalRows} Kompetenzen</td>
+    ${colCovered.map(c=>`<td>${c}/${totalRows}</td>`).join('')}
+    <td></td>
+  </tr>`;
+
+  html += `</tbody></table></div>`;
+
+  html += renderTransversalTable();
+
+  html += renderFocusRecommendation();
+
+  html += `<p class="comp-note">Tipp: Spalten mit niedrigen Werten in der letzten Zeile zeigen, welche Denkebene insgesamt noch zu wenig geübt wird.</p>`;
+
+  app.innerHTML = html;
+}
+
+function renderTransversalTable(){
+  const levelCols = LEVELS;
+  let html = `<div class="section-title" style="margin-top:36px;"><span class="dot" style="background:var(--teal)"></span>Querschnittskompetenzen</div>
+  <p class="section-desc">2.6, 4.1–4.3, 5.2 und 6.1 kommen in fast jeder Prüfungssituation vor (v. a. schriftlich), werden aber nie für die IPA ausgewählt. Deshalb separat von der Tabelle oben.</p>
+  <div class="matrix-scroll"><table class="matrix-table"><thead><tr>
+    <th class="rowhead">Kompetenz</th>
+    ${levelCols.map(l=>`<th>${l.n}<br>${l.title}</th>`).join('')}
+    <th>Aufgaben<br>total</th>
+  </tr></thead><tbody>`;
+  const colCovered = levelCols.map(()=>0);
+  TRANSVERSAL_COMPETENCIES.forEach(item=>{
+    const topic = getTopic(item.topicId);
+    const levelsPresent = new Set((topic ? topic.questions : []).map(q=>q.level).filter(Boolean));
+    html += `<tr>
+      <td class="rowhead"><span class="matrix-code">${item.code}</span> <span class="matrix-label">${item.label}</span></td>
+      ${levelCols.map((l,i)=>{
+        const ok = levelsPresent.has(l.n);
+        if(ok) colCovered[i]++;
+        return `<td>${ok?'<span class="cell-ok">✓</span>':'<span class="cell-gap">–</span>'}</td>`;
+      }).join('')}
+      <td>${topic ? topic.questions.length : 0}</td>
+    </tr>`;
+  });
+  html += `<tr class="matrix-total-row">
+    <td class="rowhead">Abgedeckt von ${TRANSVERSAL_COMPETENCIES.length}</td>
+    ${colCovered.map(c=>`<td>${c}/${TRANSVERSAL_COMPETENCIES.length}</td>`).join('')}
+    <td></td>
+  </tr>`;
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+function renderFocusRecommendation(){
+  const priorityRank = {A:0, B:1, IPA:2};
+  const levelGaps = LEVELS.map(l=>{
+    const missing = [];
+    IPA_COMPETENCIES.forEach(group=>{
+      group.items.forEach(item=>{
+        const topic = getTopic(item.topicId);
+        if(!topic) return;
+        const has = topic.questions.some(q=>q.level===l.n);
+        if(!has) missing.push({code:item.code, priority:topic.priority});
+      });
+    });
+    missing.sort((a,b)=>(priorityRank[a.priority]??3)-(priorityRank[b.priority]??3));
+    return {level:l, missing};
+  }).filter(lg=>lg.missing.length>0)
+    .sort((a,b)=> b.missing.length - a.missing.length);
+
+  if(levelGaps.length===0){
+    return `<div class="section-title" style="margin-top:32px;"><span class="dot" style="background:var(--good)"></span>Wo als Nächstes ansetzen</div>
+    <div class="explain-card"><p>Alle 19 Kompetenzen sind inzwischen auf allen 6 Ebenen mindestens einmal abgedeckt. Weitere Aufgaben lohnen sich vor allem dort, wo insgesamt noch wenige Übungen vorhanden sind (siehe Spalte "Aufgaben total").</p></div>`;
+  }
+
+  let html = `<div class="section-title" style="margin-top:32px;"><span class="dot" style="background:var(--gentle)"></span>Wo als Nächstes ansetzen</div>
+  <div class="explain-card">
+    <p>Automatisch berechnet aus der Tabelle oben – die Ebenen mit den meisten Lücken zuerst, und innerhalb jeder Ebene zuerst die A-Themen (am prüfungsrelevantesten):</p>
+    <ul>`;
+  levelGaps.slice(0,4).forEach(lg=>{
+    const topPicks = lg.missing.slice(0,5).map(m=>`${m.code}${m.priority!=='IPA'?' ('+m.priority+')':''}`).join(', ');
+    html += `<li><strong>${lg.level.n}. ${lg.level.title}</strong> — fehlt bei ${lg.missing.length} von 19 Kompetenzen, am dringendsten: ${topPicks}${lg.missing.length>5?' …':''}</li>`;
+  });
+  html += `</ul></div>`;
+  return html;
+}
+
+window.openMatrix = function(){
+  state.view = 'matrix';
+  renderMatrix();
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+
+window.openTips = function(){
+  state.view = 'tips';
+  renderTips();
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+
+window.goOverview = function(){
+  state.view='overview';
+  state.topicId=null;
+  renderOverview();
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+
+renderOverview();
+</script>
+</body>
+</html>

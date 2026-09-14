@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ablauf-Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2ED;
+    --paper:#FFFFFF;
+    --ink:#1F2A24;
+    --muted:#5B6A61;
+    --line:#DDE4DA;
+    --primary:#3E6B58;
+    --primary-dark:#2C4E40;
+    --primary-tint:#E1EAE3;
+    --amber:#B8863F;
+    --amber-tint:#F5E9D3;
+    --correct:#3F7A45;
+    --correct-tint:#E3EFDD;
+    --incorrect:#B4483C;
+    --incorrect-tint:#F7E4E0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:0.75rem 1rem 1.25rem;
+  }
+  header{
+    margin-bottom:0.5rem;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:1.05rem;
+    margin:0 0 0.15rem;
+    color:var(--primary-dark);
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:0.7rem;
+    margin:0;
+    max-width:62ch;
+    line-height:1.35;
+  }
+
+  .picker{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.3rem;
+    margin:0.5rem 0 0.6rem;
+  }
+  .picker button{
+    font-family:'Inter',sans-serif;
+    font-size:0.66rem;
+    font-weight:500;
+    padding:0.22rem 0.55rem;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--muted);
+    cursor:pointer;
+    transition:background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .picker button:hover{ border-color:var(--primary); color:var(--primary-dark); }
+  .picker button.active{
+    background:var(--primary);
+    border-color:var(--primary);
+    color:#fff;
+  }
+
+  .board{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:0.6rem;
+  }
+  @media (min-width: 720px){
+    .board{ grid-template-columns: 1.05fr 1fr; }
+  }
+
+  .panel-title{
+    font-size:0.62rem;
+    font-weight:600;
+    color:var(--muted);
+    margin:0 0 0.25rem;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .panel-title span.count{
+    font-weight:500;
+    color:var(--muted);
+  }
+
+  .slots{
+    display:flex;
+    flex-direction:column;
+    gap:0.2rem;
+  }
+  .slot{
+    display:flex;
+    align-items:stretch;
+    min-height:26px;
+    border-radius:6px;
+    border:1.5px dashed var(--line);
+    background:rgba(255,255,255,0.5);
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .slot.dragover{
+    border-color:var(--primary);
+    background:var(--primary-tint);
+  }
+  .slot-num{
+    flex:0 0 22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:0.68rem;
+    color:var(--amber);
+    background:var(--amber-tint);
+    border-radius:5px 0 0 5px;
+  }
+  .slot-content{
+    flex:1;
+    display:flex;
+    align-items:center;
+    padding:0.18rem 0.45rem;
+    font-size:0.64rem;
+    line-height:1.2;
+    color:var(--muted);
+  }
+  .slot.filled{
+    border-style:solid;
+    border-color:var(--line);
+    background:var(--paper);
+    cursor:pointer;
+  }
+  .slot.filled .slot-content{ color:var(--ink); }
+  .slot.correct{
+    border-color:var(--correct);
+    background:var(--correct-tint);
+  }
+  .slot.correct .slot-num{ background:var(--correct); color:#fff; }
+  .slot.correct .slot-content{ color:var(--correct); font-weight:500; }
+  .slot.incorrect{
+    border-color:var(--incorrect);
+    background:var(--incorrect-tint);
+  }
+  .slot.locked{ cursor:default; }
+
+  .pool{
+    display:flex;
+    flex-direction:column;
+    gap:0.2rem;
+    min-height:60px;
+  }
+  .card{
+    padding:0.22rem 0.45rem;
+    background:var(--paper);
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    font-size:0.64rem;
+    line-height:1.2;
+    cursor:grab;
+    user-select:none;
+    transition:border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  }
+  .card:active{ cursor:grabbing; }
+  .card.selected{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px var(--primary-tint);
+  }
+  .card.dragging{ opacity:0.4; }
+  .pool-empty{
+    color:var(--muted);
+    font-size:0.85rem;
+    font-style:italic;
+    padding:0.5rem 0;
+  }
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:0.3rem;
+    margin-top:0.6rem;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-size:0.68rem;
+    font-weight:500;
+    padding:0.3rem 0.65rem;
+    border-radius:7px;
+    border:1.5px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .btn:hover{ border-color:var(--primary); }
+  .btn.primary{
+    background:var(--primary);
+    border-color:var(--primary);
+    color:#fff;
+  }
+  .btn.primary:hover{ background:var(--primary-dark); border-color:var(--primary-dark); }
+  .btn:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  .feedback{
+    margin-top:0.35rem;
+    font-size:0.68rem;
+    min-height:1.2em;
+  }
+  .feedback.good{ color:var(--correct); font-weight:500; }
+  .feedback.bad{ color:var(--incorrect); }
+  .feedback.info{ color:var(--muted); }
+
+  .hint{
+    font-size:0.6rem;
+    color:var(--muted);
+    margin-top:0.2rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ablauf-Trainer</h1>
+    <p class="sub">Bring die Schritte jeder Checkliste in die richtige Reihenfolge. Ziehe eine Karte von rechts an ihren Platz links, oder tippe sie an und wähle dann die Nummer.</p>
+  </header>
+
+  <nav class="picker" id="picker"></nav>
+
+  <section class="board">
+    <div>
+      <p class="panel-title">Reihenfolge <span class="count" id="slotCount"></span></p>
+      <div class="slots" id="slots"></div>
+    </div>
+    <div>
+      <p class="panel-title">Schritte <span class="count" id="poolCount"></span></p>
+      <div class="pool" id="pool"></div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button class="btn primary" id="checkBtn">Prüfen</button>
+    <button class="btn" id="shuffleBtn">Neu mischen</button>
+    <button class="btn" id="resetBtn">Zurücksetzen</button>
+  </div>
+  <p class="feedback info" id="feedback"></p>
+  <p class="hint">Tipp: Tippe auf eine Karte, um sie auszuwählen, dann auf einen freien Platz. Ein ausgefüllter Platz kann wieder angetippt werden, um die Karte zurückzulegen.</p>
+</div>
+
+<script>
+const CHECKLISTS = [
+  {
+    name: "Kaffeerunde",
+    steps: [
+      "Hände desinfizieren",
+      "Kaffeemaschine anmachen und Boy in die Küche holen",
+      "Auf der Liste nachschauen, wie viele Kaffee/Espresso nötig sind",
+      "Tassen auf den Tresen stellen und Unterteller auf den Boy verteilen",
+      "Kaffee kochen und Milchkanne vom Mittagswagen holen",
+      "Kaffee eingiessen, auf Untertasse stellen, ggf. Milch dazugeben",
+      "Kaffeemaschine ausmachen",
+      "Dessert-Tablett auf den Boy schieben und Kaffeerunde verteilen",
+      "Kaffeemaschine reinigen, Kaffeesatz entsorgen, Müllbeutel wechseln",
+      "Geschirr in die Spülmaschine stellen und anstellen",
+      "Geschirr wegräumen und Küche reinigen",
+      "Hände desinfizieren"
+    ]
+  },
+  {
+    name: "Ausgüsse reinigen",
+    steps: [
+      "Sachen aus dem Ausguss auf einen Boy stellen",
+      "Hände desinfizieren",
+      "Handschuhe anziehen",
+      "Abgelaufene grosse Tücher wegwerfen (über 1 Monat)",
+      "Saubere Seite reinigen",
+      "Zur schmutzigen Seite wechseln, wenn nötig neue Handschuhe",
+      "Böden des Beckens auf der schmutzigen Seite mitreinigen",
+      "Topfmaschine desinfizieren und entleeren",
+      "Deckel der Wäsche-, Müll- und Blau-Beutel auf der sauberen Seite desinfizieren",
+      "Kleine Eimer kontrollieren, entsorgen oder desinfizieren",
+      "Volle Müllsäcke tauschen",
+      "Sachen zurückstellen",
+      "Boy mit Bacillotüchern desinfizieren und wegstellen",
+      "Hände desinfizieren"
+    ]
+  },
+  {
+    name: "Körperpflege – Vorbereitung",
+    steps: [
+      "Pflegedoku lesen",
+      "Material auf den Boy legen (Becken, Handtücher, Waschlappen, Einwegtücher)",
+      "Präsenzlicht einschalten, Hände desinfizieren, Patient begrüssen",
+      "Brille aufsetzen, Hörgeräte und Zähne einsetzen",
+      "Patient informieren, Einverständnis einholen, Wassertemperatur erfragen",
+      "Gute Lichtverhältnisse schaffen, Paravent anbringen, Fenster schliessen",
+      "Material im Zimmer vorbereiten (Handschuhe, Abfalleimer, Hautpflege, Inkontinenzmaterial, Wäsche)",
+      "Wasser und Kleidung bereitstellen",
+      "Evtl. zweite Person zum Helfen organisieren",
+      "Wassertemperatur durch Patient prüfen lassen",
+      "Bett auf Arbeitshöhe stellen",
+      "Hände desinfizieren"
+    ]
+  },
+  {
+    name: "Getränkerunde",
+    steps: [
+      "Nach der Frühstücksrunde mit der Siruprunde beginnen",
+      "In der Stationsküche prüfen, ob die Spülmaschine durchgelaufen ist",
+      "Anhand der Sirupliste abzählen, wie viele Flaschen nötig sind",
+      "Prüfen, ob genug blaue/grüne Flaschen vorhanden sind, ggf. auffüllen",
+      "Flaschen mit Patientenname und Datum anschreiben",
+      "Mit dem Wagen zum ersten Zimmer fahren und anklopfen",
+      "Patient begrüssen und ankündigen, was gemacht wird",
+      "Fehlende Flaschen und Gläser auf dem Tisch ergänzen",
+      "Tisch mit Bacilloltuch desinfizieren",
+      "Benutztes Geschirr, Gläser oder Zeitungen mitnehmen",
+      "Fragen, ob der Patient noch etwas braucht",
+      "Wagen mit neuen Flaschen auffüllen, Geschirr in die Spülmaschine, PET-Flaschen leeren",
+      "Wagen auffüllen: neue Flaschen nach hinten, alte nach vorne",
+      "Wagen zurückstellen und Spülmaschine anstellen",
+      "Hände desinfizieren"
+    ]
+  },
+  {
+    name: "Pflegekästen auffüllen",
+    steps: [
+      "Zwei Wagen bereitstellen (Bettwäsche-Wagen und Stationswagen)",
+      "Grosse und kleine Handtücher und Badetücher auffüllen",
+      "Wagen mit Waschlappen, Bettwäsche, Bettunterlagen, Nachthemden beladen",
+      "Von Zimmer zu Zimmer gehen, Wagen vor die Tür stellen",
+      "Pflegeschränke auffüllen (Wäsche, Einlagen, Netzhosen, Handschuhe, Softwipes, Taschentücher)",
+      "Fehlende Sachen nachfüllen",
+      "Vorgaben für Bettwäsche und Handtücher beachten, an Liste halten (Mo–Do)",
+      "Freitags Schränke bis ganz oben auffüllen",
+      "Hygienewagen mit fehlendem Material vom Magazin auffüllen",
+      "Hände desinfizieren"
+    ]
+  },
+  {
+    name: "Mobiliar reinigen",
+    steps: [
+      "Diensthabende und Klient informieren",
+      "Rollstuhl oder Rollator holen",
+      "An günstigem Ort platzieren (Ausguss)",
+      "Boy desinfizieren",
+      "Material bereitstellen (x-Wipes, Handschuhe, Mülleimer)",
+      "Hände desinfizieren, Handschuhe anziehen",
+      "Von oben nach unten und von innen nach aussen reinigen",
+      "Besondere Stellen beachten (Armlehnen, Sitzflächen, Räder)",
+      "Rollstuhl oder Rollator kontrollieren (Bremsen, Gelenke)",
+      "Material entsorgen, Sachen zurückstellen, Boy desinfizieren",
+      "Rollstuhl oder Rollator zurückbringen, Klient informieren",
+      "Dokumentieren und Diensthabende informieren"
+    ]
+  },
+  {
+    name: "Betten machen",
+    steps: [
+      "Frische Bettwäsche zusammensuchen und auf den Boy legen",
+      "Ins Zimmer gehen, Präsenzlicht anmachen, Hände desinfizieren",
+      "Patient begrüssen und ankündigen, was gemacht wird",
+      "Hilfsutensilien entfernen",
+      "Wenn nötig Handschuhe anziehen (bei beschmutztem Bett)",
+      "Schmutzige Wäsche abziehen und ins Leinentuch legen",
+      "Matratze desinfizieren",
+      "Handschuhe ausziehen, Hände desinfizieren",
+      "Bett frisch beziehen",
+      "Schmutzige Wäsche im Ausguss versorgen",
+      "Boy und Hände desinfizieren"
+    ]
+  },
+  {
+    name: "Essen und Trinken",
+    steps: [
+      "Trinkbilanz ausdrucken und verteilen",
+      "Hände desinfizieren",
+      "Getränkewagen vorbereiten",
+      "Hände desinfizieren vor dem Gang mit dem Wagen",
+      "Bewohner fragen: Wasser, Sirup oder Tee",
+      "Leere Flaschen, Gläser und Geschirr mitnehmen",
+      "Tisch desinfizieren",
+      "Frisches Getränk bringen und einschenken",
+      "Hände desinfizieren vor dem Gang ins nächste Zimmer",
+      "Nach dem Essen abräumen, Trinkplan ausfüllen",
+      "Tablar, leere Flaschen und benutzte Gläser abräumen",
+      "Natel oder Fernbedienung hinstellen",
+      "Ordnung im Zimmer prüfen",
+      "Getränkewagen auffüllen (First in, First out)",
+      "Getränkewagen desinfizieren"
+    ]
+  }
+];
+
+let currentIndex = 0;
+let order = [];
+let slots = [];
+let selectedId = null;
+let checked = false;
+
+const pickerEl = document.getElementById('picker');
+const slotsEl = document.getElementById('slots');
+const poolEl = document.getElementById('pool');
+const slotCountEl = document.getElementById('slotCount');
+const poolCountEl = document.getElementById('poolCount');
+const feedbackEl = document.getElementById('feedback');
+const checkBtn = document.getElementById('checkBtn');
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildPicker(){
+  pickerEl.innerHTML = '';
+  CHECKLISTS.forEach((list, i) => {
+    const b = document.createElement('button');
+    b.textContent = list.name;
+    if(i === currentIndex) b.classList.add('active');
+    b.addEventListener('click', () => loadList(i));
+    pickerEl.appendChild(b);
+  });
+}
+
+function loadList(i){
+  currentIndex = i;
+  const steps = CHECKLISTS[i].steps;
+  order = shuffle(steps.map((_, idx) => idx));
+  slots = new Array(steps.length).fill(null);
+  selectedId = null;
+  checked = false;
+  feedbackEl.textContent = '';
+  feedbackEl.className = 'feedback info';
+  buildPicker();
+  render();
+}
+
+function currentSteps(){
+  return CHECKLISTS[currentIndex].steps;
+}
+
+function render(){
+  const steps = currentSteps();
+  slotCountEl.textContent = slots.filter(s => s !== null).length + ' / ' + slots.length;
+  poolCountEl.textContent = order.length + ' übrig';
+
+  slotsEl.innerHTML = '';
+  slots.forEach((stepId, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.dataset.index = i;
+    if(stepId !== null) slot.classList.add('filled');
+    if(slot.dataset.state === 'correct') slot.classList.add('correct');
+
+    const num = document.createElement('div');
+    num.className = 'slot-num';
+    num.textContent = i + 1;
+
+    const content = document.createElement('div');
+    content.className = 'slot-content';
+    content.textContent = stepId !== null ? steps[stepId] : 'Platz frei';
+
+    slot.appendChild(num);
+    slot.appendChild(content);
+
+    slot.addEventListener('dragover', (e) => {
+      if(checked) return;
+      e.preventDefault();
+      slot.classList.add('dragover');
+    });
+    slot.addEventListener('dragleave', () => slot.classList.remove('dragover'));
+    slot.addEventListener('drop', (e) => {
+      e.preventDefault();
+      slot.classList.remove('dragover');
+      if(checked) return;
+      const id = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      placeInSlot(id, i);
+    });
+
+    slot.addEventListener('click', () => {
+      if(checked) return;
+      if(stepId === null && selectedId !== null){
+        placeInSlot(selectedId, i);
+      } else if(stepId !== null){
+        returnToPool(i);
+      }
+    });
+
+    slotsEl.appendChild(slot);
+  });
+
+  poolEl.innerHTML = '';
+  if(order.length === 0){
+    const empty = document.createElement('p');
+    empty.className = 'pool-empty';
+    empty.textContent = 'Alle Karten platziert.';
+    poolEl.appendChild(empty);
+  } else {
+    order.forEach(id => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      if(id === selectedId) card.classList.add('selected');
+      card.draggable = true;
+      card.textContent = steps[id];
+
+      card.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', id);
+        card.classList.add('dragging');
+      });
+      card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+      card.addEventListener('click', () => {
+        if(checked) return;
+        selectedId = (selectedId === id) ? null : id;
+        render();
+      });
+
+      poolEl.appendChild(card);
+    });
+  }
+
+  checkBtn.disabled = slots.some(s => s === null);
+}
+
+function placeInSlot(id, slotIndex){
+  if(slots[slotIndex] !== null) return;
+  order = order.filter(x => x !== id);
+  slots[slotIndex] = id;
+  selectedId = null;
+  render();
+}
+
+function returnToPool(slotIndex){
+  const id = slots[slotIndex];
+  if(id === null) return;
+  slots[slotIndex] = null;
+  order.push(id);
+  render();
+}
+
+function checkOrder(){
+  const slotEls = Array.from(slotsEl.children);
+  let correctCount = 0;
+  let toClear = [];
+
+  slots.forEach((stepId, i) => {
+    if(stepId === i){
+      correctCount++;
+      slotEls[i].classList.add('correct');
+    } else {
+      slotEls[i].classList.add('incorrect');
+      toClear.push(i);
+    }
+  });
+
+  const total = slots.length;
+  if(correctCount === total){
+    feedbackEl.textContent = 'Alle ' + total + ' Schritte in der richtigen Reihenfolge.';
+    feedbackEl.className = 'feedback good';
+    checked = true;
+    checkBtn.disabled = true;
+  } else {
+    feedbackEl.textContent = correctCount + ' von ' + total + ' Plätzen korrekt. Die rot markierten Schritte gehen zurück zum Üben.';
+    feedbackEl.className = 'feedback bad';
+    setTimeout(() => {
+      toClear.forEach(i => {
+        order.push(slots[i]);
+        slots[i] = null;
+      });
+      render();
+    }, 1100);
+  }
+}
+
+checkBtn.addEventListener('click', () => {
+  if(slots.some(s => s === null)) return;
+  checkOrder();
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  if(checked) return;
+  order = shuffle(order);
+  render();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  loadList(currentIndex);
+});
+
+loadList(0);
+</script>
+</body>
+</html>
