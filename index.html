@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trainings-Tools</title>
+<style>
+  :root{
+    --bg:#FAF6EF;
+    --ink:#2C332F;
+    --ink-soft:#5B655F;
+    --line:#E4DFD3;
+    --teal:#3F7168;
+    --teal-dark:#2C534C;
+    --card-bg:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height:1.6;
+    padding:32px 18px 60px;
+  }
+  .wrap{ max-width:640px; margin:0 auto; }
+  h1{ font-size:1.6rem; margin:0 0 8px; }
+  p.sub{ color:var(--ink-soft); margin:0 0 32px; }
+  .card{
+    display:block;
+    background:var(--card-bg);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 22px;
+    margin-bottom:16px;
+    text-decoration:none;
+    color:var(--ink);
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .card:hover{ border-color:var(--teal); transform:translateY(-1px); }
+  .card h2{ margin:0 0 4px; font-size:1.15rem; color:var(--teal-dark); }
+  .card span{ color:var(--ink-soft); font-size:0.92rem; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Trainings-Tools</h1>
+    <p class="sub">Direkt auf dem iPhone nutzbar – einfach antippen.</p>
+
+    <a class="card" href="ags-pruefungs-kern.html">
+      <h2>AGS Prüfung</h2>
+      <span>Prüfungs-Kern zum Üben</span>
+    </a>
+
+    <a class="card" href="AGS_Fachwort_Quiz.html">
+      <h2>Fachwörter</h2>
+      <span>Fachbegriffe-Trainer Pflege &amp; Betreuung</span>
+    </a>
+
+    <a class="card" href="Ablauf-Trainer_Checklisten.html">
+      <h2>Checklisten-Trainer</h2>
+      <span>Abläufe Schritt für Schritt üben</span>
+    </a>
+  </div>
+</body>
+</html>
