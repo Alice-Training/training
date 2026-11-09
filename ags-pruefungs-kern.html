@@ -329,6 +329,32 @@
 
   .zuordnen-row{ display:flex; gap:10px; margin-top:4px; }
 
+
+  /* Reihenfolge (Drag & Drop) */
+  .order-hint{ font-size:0.82rem; color:var(--ink-soft); margin:-6px 0 12px; }
+  .order-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+  .order-col-title{ font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:6px; }
+  .order-slot{ display:flex; gap:8px; align-items:stretch; margin-bottom:8px; }
+  .order-num{ flex:0 0 30px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:var(--teal); color:#fff; font-weight:700; font-size:0.9rem; }
+  .order-drop{ flex:1; min-height:46px; border:1.5px dashed var(--line); border-radius:10px; display:flex; align-items:stretch; cursor:pointer; transition:border-color .15s, background .15s; }
+  .order-drop.hover, .order-drop.target{ border-color:var(--teal); background:rgba(63,113,104,.07); }
+  .order-drop.filled{ border-style:solid; }
+  .order-drop.correct{ border-color:var(--good); background:var(--good-tint); }
+  .order-drop.wrong{ border-color:var(--gentle); background:var(--gentle-tint); }
+  .order-pool{ min-height:120px; border:1.5px dashed var(--line); border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:8px; }
+  .order-pool.hover, .order-pool.target{ border-color:var(--teal); background:rgba(63,113,104,.07); }
+  .order-pool-empty{ font-size:0.8rem; color:var(--ink-soft); text-align:center; padding:14px 6px; }
+  .order-chip{ flex:1; background:#fff; border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; font-size:0.86rem; line-height:1.4; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .order-pool .order-chip{ flex:0 0 auto; }
+  .order-drop .order-chip{ border:none; background:transparent; }
+  .order-chip:hover{ border-color:var(--teal); }
+  .order-chip.selected{ border-color:var(--teal); box-shadow:0 0 0 2px var(--teal); }
+  .order-chip.locked{ cursor:default; }
+  .order-ghost{ position:fixed; z-index:9999; pointer-events:none; opacity:.92; box-shadow:0 8px 24px rgba(0,0,0,.18); transform:rotate(-1.5deg); }
+  .order-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+  .order-solution{ margin:8px 0 0; padding-left:20px; }
+  .order-solution li{ margin-bottom:3px; }
+  @media (max-width:600px){ .order-grid{ grid-template-columns:1fr; } .order-pool{ min-height:60px; } }
   .matchmulti-row{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
   .matchmulti-statement{ font-size:0.92rem; margin-bottom:10px; line-height:1.5; }
   .matchmulti-options{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -553,6 +579,9 @@ const topicsA = [
       'Deine Rolle als AGS: ruhig bleiben, Hilfe holen/Notruf auslösen, bei der Person bleiben, genau beobachten, was passiert ist, und alles weitergeben.'
     ],
     questions:[
+      {type:'order', level:3, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 1.4. Frau Huber hat Asthma und bekommt plötzlich schwer Luft.', prompt:'Bringe deine Massnahmen bei Atemnot in die richtige Reihenfolge.',
+        steps:['Ruhe bewahren, nicht alleine lassen, beruhigend sprechen','Alarm auslösen / Pflegefachperson rufen, bei Lebensgefahr 144','Atemerleichternde Position: Oberkörper hoch, Arme abstützen (Kutschersitz)','Beengende Kleidung öffnen, Fenster öffnen','Zur Lippenbremse anleiten','Notfallmedikament (z. B. Asthmaspray) und O2 nach Verordnung bereitstellen','Beobachten: Atmung, Puls, Sauerstoffsättigung, Hautfarbe, Bewusstsein','Ereignis dokumentieren und weiterleiten'],
+        explain:'Wichtig: Zuerst die Person nicht alleine lassen und Hilfe holen. Medikamente und O2 gibt es nur nach Verordnung.'},
       {type:'frei', level:2, context:'Quelle: BFGS-Dossier Situation 1.7 (Notfallsituationen).', prompt:'Was ist das Ziel der Ersten Hilfe? Nenne drei Punkte.',
         model:'Laut Dossier: Leben erhalten und retten, weitere Schädigungen der Gesundheit vermeiden, eingetretene Schädigungen (z. B. Verbrennungen) begrenzen und die Heilung fördern.'},
       {type:'matchmulti', level:2, context:'Quelle: BFGS-Dossier Situation 1.7 – Notrufnummern.', prompt:'Ordne jeder Situation die passende Notrufnummer zu.',
@@ -989,7 +1018,7 @@ const topicsA = [
 
 const topicsB = [
   {id:'prophylaxen', priority:'B', title:'Prophylaxen', comp:'1.4',
-    intro:['Sturz-, Dekubitus-, Thrombose-, Kontrakturen- und Pneumonieprophylaxe sind die wichtigsten Formen.','Ziel: Komplikationen von vornherein verhindern, nicht erst behandeln.'],
+    intro:['Sturz-, Dekubitus-, Thrombose-, Kontrakturen- und Pneumonieprophylaxe sind die wichtigsten Formen.','Ziel: Komplikationen von vornherein verhindern, nicht erst behandeln.','Massnahmen „nach Verordnung“ (z. B. Inhalation, Abklopfen, Kompressionsstrümpfe, Heparin, O2) führst du als AGS nur delegiert durch die Pflegefachperson aus.'],
     questions:[
       {type:'mc', level:2, context:'', prompt:'Welche Prophylaxe verhindert Druckgeschwüre?', options:['Thromboseprophylaxe','Dekubitusprophylaxe','Pneumonieprophylaxe','Kontrakturenprophylaxe'], correct:1,
         explain:'Dekubitusprophylaxe (z. B. regelmässige Lagewechsel) beugt Druckgeschwüren vor.'},
@@ -997,13 +1026,58 @@ const topicsB = [
         model:'Zum Beispiel: Kompressionsstrümpfe (MTS) korrekt anziehen, faltenfrei; Bewegung/Beine hochlagern fördern.'},
       {type:'mc', level:1, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). Eine Hautveränderung am Steissbein könnte ein Dekubitus sein.', prompt:'Welches Stadium beschreibt eine Rötung, die auf Druck nicht verschwindet?',
         options:['Stadium 1','Stadium 2','Stadium 3','Stadium 4'],
-        correct:0, explain:'Stadium 1 ist eine nicht wegdrückbare Rötung – das früheste Anzeichen eines beginnenden Dekubitus (offizielle Musterlösung).'},
+        correct:0, explain:'Stadium 1 ist eine nicht wegdrückbare Rötung – das früheste Anzeichen eines beginnenden Dekubitus (offizielle Musterlösung). Heute spricht man oft von „Kategorie“ statt „Stadium“ – gemeint ist dasselbe.'},
       {type:'frei', level:3, context:'Quelle: QV 2019, Teil 1 (Frau Grosjean). In Rücksprache mit der zuständigen Fachperson führst du Massnahmen zur Dekubitusprophylaxe durch.', prompt:'Nenne vier Massnahmen.',
         model:'Laut offizieller Musterlösung: regelmässig umlagern (z. B. alle zwei Stunden), Hautpflege (gut waschen, trocknen, eincremen), eine Antidekubitus-Matratze verwenden, für ausreichende Flüssigkeit und eiweissreiche Ernährung sorgen.'},
       {type:'frei', level:3, context:'Quelle: QV 2017, Teil 3 (Frau Rosenthal). Sie erwartet jeden Morgen, dass du ihr die Kompressionsstrümpfe anziehst.', prompt:'Nenne drei Grundsätze, die du dabei beachtest.',
         model:'Laut offizieller Musterlösung: sie sollte sich vor dem Anziehen 20-30 Minuten hinlegen, die Strümpfe dürfen keine Falten haben, die Farbe der Zehen wird kontrolliert.'},
       {type:'frei', level:3, context:'Quelle: QV 2018, Teil 1 (Herr Lang). Vor der Mobilisation führst du mit ihm Bewegungsübungen zur Thromboseprophylaxe am gesunden Bein durch.', prompt:'Nenne zwei Bewegungsübungen, die du ihm zeigst.',
         model:'Laut offizieller Musterlösung: den Fuss bewegen, die Wadenmuskulatur anspannen, die Zehen beugen und strecken, das Bein wie beim Radfahren bewegen.'},
+      {type:'frei', level:2, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 1.2 Pneumonie.', prompt:'Nenne vier Risikofaktoren für eine Pneumonie.',
+        model:'Zum Beispiel: hohes Alter, Immobilität/Bettlägerigkeit, flache Atmung (Schmerzen, Beruhigungsmittel), Schluckstörungen (nach Schlaganfall, Demenz, Parkinson), schwaches Immunsystem/Mangelernährung, Vorerkrankungen wie COPD oder Herzinsuffizienz, Rauchen, mangelnde Mundhygiene, Flüssigkeitsmangel, Magensonde.'},
+      {type:'multitf', level:3, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 1.3 Aspiration vermeiden. Herr Keller hat nach einem Schlaganfall eine Schluckstörung. Du begleitest ihn beim Mittagessen.', prompt:'Was tust du, was nicht?',
+        rows:[
+          {statement:'Ich setze ihn zum Essen aufrecht hin (ca. 90°).', correct:true, reason:'Aufrecht sitzen ist die wichtigste Massnahme gegen Aspiration.'},
+          {statement:'Direkt nach dem Essen lege ich ihn flach hin, damit er sich ausruhen kann.', correct:false, reason:'Er bleibt noch ca. 30 Minuten nach dem Essen aufrecht sitzen.'},
+          {statement:'Beim Schlucken soll der Kopf leicht nach vorne geneigt sein (Kinn Richtung Brust).', correct:true, reason:'So ist die Luftröhre besser geschützt.'},
+          {statement:'Beim Trinken lege ich seinen Kopf in den Nacken, damit es besser rinnt.', correct:false, reason:'Mit dem Kopf im Nacken gelangt Flüssigkeit leichter in die Luftröhre.'},
+          {statement:'Ich gebe kleine Bissen und lasse ihm Zeit.', correct:true, reason:'Ruhig essen, kleine Bissen und Schlucke, kein Zeitdruck.'},
+          {statement:'Ich unterhalte mich während des Essens angeregt mit ihm, damit er sich wohlfühlt.', correct:false, reason:'Beim Essen nicht sprechen und Ablenkung vermeiden.'},
+          {statement:'Nach dem Essen mache ich Mundpflege.', correct:true, reason:'Essensreste im Mund können sonst später aspiriert werden.'}
+        ]},
+      {type:'frei', level:4, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 1.3. Du reichst Herrn Keller das Essen.', prompt:'Nenne drei Anzeichen, an denen du eine Schluckstörung erkennst.',
+        model:'Husten, Räuspern und eine gurgelnde (belegte) Stimme während oder nach dem Essen. Solche Zeichen meldest du der Pflegefachperson. Achtung: Eine Aspiration kann auch „still“ passieren, ohne Husten.'},
+      {type:'multitf', level:5, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung). Massnahmen mit „nach Verordnung“ führst du nur delegiert durch die Pflegefachperson aus.', prompt:'Was darfst du selbstständig durchführen, was nur nach Verordnung?',
+        labels:['Selbstständig','Nur nach Verordnung'],
+        rows:[
+          {statement:'Den Klienten mobilisieren und zum Gehen motivieren', correct:true, reason:'Bewegung ist eine Grundmassnahme der Pneumonie- und Thromboseprophylaxe.'},
+          {statement:'Inhalation durchführen', correct:false, reason:'Inhalation nur nach Verordnung.'},
+          {statement:'Den Oberkörper hochlagern', correct:true, reason:'Das ist eine einfache Lagerungsmassnahme.'},
+          {statement:'Vibrationsmassage / Abklopfen', correct:false, reason:'Nur nach Verordnung.'},
+          {statement:'Getränke anbieten und die Trinkmenge beobachten', correct:true, reason:'Genügend trinken verflüssigt Sekret und senkt die Thrombosegefahr.'},
+          {statement:'Kompressionsstrümpfe anziehen', correct:false, reason:'Kompressionsstrümpfe gibt es nur nach ärztlicher Verordnung, in der richtigen Grösse.'},
+          {statement:'Sauerstoff (O2) geben', correct:false, reason:'O2 nur nach Verordnung.'}
+        ]},
+      {type:'matchmulti', level:2, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 2.2 Virchow-Trias.', prompt:'Ordne jeden Risikofaktor der passenden Ursache einer Thrombose zu.',
+        categories:['Blut fliesst zu langsam','Blut gerinnt zu schnell','Gefässwand geschädigt'],
+        rows:[
+          {statement:'Bettlägerigkeit', category:'Blut fliesst zu langsam'},
+          {statement:'Lange Flug- oder Busreise', category:'Blut fliesst zu langsam'},
+          {statement:'Zu wenig getrunken (Flüssigkeitsmangel)', category:'Blut gerinnt zu schnell'},
+          {statement:'Nach einer Operation', category:'Blut gerinnt zu schnell'},
+          {statement:'Krampfadern (Varizen)', category:'Gefässwand geschädigt'},
+          {statement:'Arteriosklerose', category:'Gefässwand geschädigt'}
+        ]},
+      {type:'frei', level:4, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 2.3 Muskelpumpe.', prompt:'Begründe, warum Bewegungsübungen wie Füsse wippen oder Zehen krallen einer Thrombose vorbeugen.',
+        model:'Die Wadenmuskeln drücken beim Anspannen die tiefen Beinvenen zusammen und pressen das Blut Richtung Herz (Muskelpumpe). Die Venenklappen verhindern den Rückfluss. So fliesst das Blut schneller und es bildet sich weniger leicht ein Gerinnsel.'},
+      {type:'tf', level:5, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 2.2. Frau Meier klagt über ein geschwollenes, warmes, schmerzendes linkes Bein.', prompt:'„Ich massiere ihr die Wade und gehe mit ihr ein paar Schritte, damit das Blut wieder fliesst.“ – Richtig so?',
+        correct:false, correction:'Bei Verdacht auf Thrombose das Bein ruhig halten, nicht massieren, nicht mobilisieren und sofort die Pflegefachperson informieren. Sonst kann sich das Gerinnsel lösen (Lungenembolie).'},
+      {type:'mc', level:4, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 2.2. Herr Lang ist vor einigen Tagen an der Hüfte operiert worden. Plötzlich hat er starke Atemnot, Schmerzen in der Brust, Herzrasen und grosse Angst.', prompt:'Woran musst du denken und was tust du?',
+        options:['Lungenembolie: Notfall, sofort Alarm auslösen bzw. 144 und bei ihm bleiben','Pneumonie: Tee anbieten und am Abend Fieber messen','Er ist aufgeregt: beruhigen und in einer Stunde nochmals schauen','Er hat sich verschluckt: Schläge zwischen die Schulterblätter'],
+        correct:0, explain:'Nach einer Operation ist das Thromboserisiko hoch. Plötzliche Atemnot, Brustschmerzen, Herzrasen und Angst sind Zeichen einer Lungenembolie, eines lebensgefährlichen Notfalls: Alarm auslösen bzw. 144 anrufen, nicht alleine lassen.'},
+      {type:'order', level:3, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 2.3. Vgl. QV 2017, Teil 3 (Frau Rosenthal).', prompt:'Bringe die Schritte beim Anziehen der Kompressionsstrümpfe in die richtige Reihenfolge.',
+        steps:['Verordnung und richtige Grösse prüfen','Morgens im Liegen anziehen, bevor die Klientin aufsteht','Haut kontrollieren: Wunden, Rötungen? Haut muss trocken sein','Strumpf bis zur Ferse umstülpen, über den Fuss ziehen, Ferse korrekt platzieren','Gleichmässig nach oben ziehen: faltenfrei, nicht umschlagen oder aufrollen','Zehen kontrollieren: Farbe, Temperatur, Gefühl, Beweglichkeit','Abends ausziehen, Haut pflegen und beobachten','Dokumentieren'],
+        explain:'Bei Schmerzen, Taubheit, blauen oder kalten Zehen ziehst du die Strümpfe sofort aus und meldest es.'},
       {type:'frei', level:4, context:'', prompt:'Begründe, warum Dekubitusprophylaxe (z. B. regelmässige Lagewechsel) so wichtig ist.',
         model:'Weil sie Druckgeschwüre von vornherein verhindert – es ist deutlich einfacher, einem Dekubitus vorzubeugen, als ihn später zu behandeln.'},
       {type:'mc', level:6, context:'Übung nach dem Prüfungsmuster (Fragetechnik "korrekten Eintrag auswählen"). Du dokumentierst die Hautkontrolle bei Frau Grosjean.', prompt:'Welcher Eintrag ist korrekt formuliert?',
@@ -1016,7 +1090,13 @@ const topicsB = [
     intro:['Grundkenntnisse zu Haut, Bewegungsapparat, Herz-Kreislauf und Ausscheidungsorganen genügen.','Zusammenhänge verstehen ist wichtiger als alles auswendig zu können.'],
     questions:[
       {type:'mc', context:'', prompt:'Welches Organsystem umfasst Nieren, Blase und Harnröhre?', options:['Verdauungssystem','Harnsystem','Atmungssystem','Kreislaufsystem'], correct:1,
-        explain:'Nieren, Blase und Harnröhre gehören zum Harnsystem.'}
+        explain:'Nieren, Blase und Harnröhre gehören zum Harnsystem.'},
+      {type:'order', level:2, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 1.1 Atemorgane.', prompt:'Bringe den Weg der eingeatmeten Luft in die richtige Reihenfolge.',
+        steps:['Nase / Mund: Luft wird erwärmt, befeuchtet, gereinigt','Rachen (Pharynx): Luft- und Speiseweg kreuzen sich','Kehlkopf (Larynx) mit Kehldeckel','Luftröhre (Trachea)','Bronchien','Bronchiolen','Alveolen: Gasaustausch – O2 ins Blut, CO2 hinaus'],
+        explain:'Danach bindet sich der Sauerstoff im Blut ans Hämoglobin und wird über das Herz bis zu den Zellen gepumpt.'},
+      {type:'mc', level:4, context:'Quelle: Dossier Prophylaxen A4/1.4 (Musterlösung), 1.1.', prompt:'Was schützt die Luftröhre beim Schlucken davor, dass Nahrung hineingelangt?',
+        options:['Der Kehldeckel (Epiglottis) verschliesst die Luftröhre','Die Flimmerhärchen schliessen die Luftröhre','Die Stimmbänder ziehen sich zusammen','Die Knorpelspangen der Luftröhre'],
+        correct:0, explain:'Beim Schlucken hebt sich der Kehlkopf und der Kehldeckel verschliesst die Luftröhre. Schliesst er nicht rechtzeitig, gelangt Nahrung in die Luftröhre (Aspiration).'}
     ]},
   {id:'vitalzeichen', priority:'B', title:'Vitalzeichen', comp:'1.6',
     intro:['Puls, Blutdruck, Temperatur und Atmung sind die wichtigsten Vitalzeichen.','Werte sofort nach der Messung dokumentieren und Auffälliges melden.'],
@@ -1694,6 +1774,7 @@ function iconFor(type){
   if(type==='frei') return '✎';
   if(type==='multitf') return '☑';
   if(type==='matchmulti') return '🔗';
+  if(type==='order') return '⇅';
   return '?';
 }
 function labelFor(type){
@@ -1703,6 +1784,7 @@ function labelFor(type){
   if(type==='frei') return 'Eigene Antwort formulieren';
   if(type==='multitf') return 'Tue ich / tue ich nicht – mehrere Aussagen';
   if(type==='matchmulti') return 'Begriffen zuordnen';
+  if(type==='order') return 'Richtige Reihenfolge – Schritte ziehen';
   return '';
 }
 
@@ -1885,7 +1967,7 @@ function renderTopic(){
   const key = t.id+'-'+state.qIndex;
   if(!answerState[key]) answerState[key] = (q.type==='multitf' || q.type==='matchmulti')
     ? {answered:false, rows:q.rows.map(()=>({selected:null}))}
-    : {answered:false, selected:null};
+    : (q.type==='order' ? orderInitState(q) : {answered:false, selected:null});
 
   let html = `<button class="backbtn" onclick="goOverview()">← Übersicht</button>`;
   html += `<span class="badge ${t.priority}">${t.title}</span>`;
@@ -1906,6 +1988,8 @@ function renderTopic(){
     html += renderMultiTF(t, q, key);
   } else if(q.type==='matchmulti'){
     html += renderMatchMulti(t, q, key);
+  } else if(q.type==='order'){
+    html += renderOrder(t, q, key);
   }
 
   html += `</div>`; // qwrap
@@ -2021,13 +2105,13 @@ function renderMatchMulti(t,q,key){
     html += `<div class="matchmulti-row">
       <div class="matchmulti-statement">${row.statement}</div>
       <div class="matchmulti-options">`;
-    q.categories.forEach(cat=>{
+    q.categories.forEach((cat,ci)=>{
       let cls='';
       if(done){
         if(cat===row.category) cls='correct';
         else if(cat===sel) cls='wrong';
       }
-      html += `<button class="${cls}" ${done?'disabled':''} onclick="answerMatchRow('${key}',${i},${JSON.stringify(cat)})">${cat}</button>`;
+      html += `<button class="${cls}" ${done?'disabled':''} onclick="answerMatchRow('${key}',${i},${ci})">${cat}</button>`;
     });
     html += `</div></div>`;
   });
@@ -2036,6 +2120,187 @@ function renderMatchMulti(t,q,key){
   }
   return html;
 }
+
+
+/* ---------- Reihenfolge (Drag & Drop) ---------- */
+function orderShuffle(n){
+  const a=[...Array(n).keys()];
+  for(let tries=0; tries<20; tries++){
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    if(a.some((v,i)=>v!==i)) break;
+  }
+  return a;
+}
+function orderInitState(q){
+  return {answered:false, slots:q.steps.map(()=>null), pool:orderShuffle(q.steps.length), selected:null};
+}
+function renderOrder(t,q,key){
+  const st = answerState[key];
+  const placed = st.slots.filter(v=>v!==null).length;
+  const sel = st.selected;
+  const isSel = (where,idx)=> sel && sel.where===where && sel.idx===idx;
+  let html = `<div class="qprompt">${q.prompt}</div>`;
+  if(!st.answered) html += `<div class="order-hint">Ziehe die Schritte von rechts auf die richtige Nummer – oder tippe zuerst einen Schritt und dann die Nummer an.</div>`;
+  html += `<div class="multitf-progress">${placed} von ${q.steps.length} Schritten platziert</div>`;
+  html += `<div class="order-grid"><div><div class="order-col-title">Reihenfolge</div>`;
+  st.slots.forEach((stepIdx,i)=>{
+    let cls='order-drop';
+    if(stepIdx!==null) cls+=' filled';
+    if(st.answered) cls += (stepIdx===i ? ' correct' : ' wrong');
+    else if(sel) cls+=' target';
+    html += `<div class="order-slot"><div class="order-num">${i+1}</div>
+      <div class="${cls}" data-odrop="slot" data-oidx="${i}" ${st.answered?'':`onclick="orderTapTarget('${key}','slot',${i})"`}>`;
+    if(stepIdx!==null){
+      html += `<div class="order-chip ${st.answered?'locked':''} ${isSel('slot',i)?'selected':''}" ${st.answered?'':`onpointerdown="orderDown(event,'${key}','slot',${i})" onclick="event.stopPropagation()"`}>${q.steps[stepIdx]}</div>`;
+    }
+    html += `</div></div>`;
+  });
+  html += `</div><div ${st.answered?'style="display:none"':''}><div class="order-col-title">Schritte</div>`;
+  html += `<div class="order-pool ${(!st.answered && sel && sel.where==='slot')?'target':''}" data-odrop="pool" ${st.answered?'':`onclick="orderTapTarget('${key}','pool',-1)"`}>`;
+  if(st.pool.length===0) html += `<div class="order-pool-empty">${st.answered?'—':'Alle Schritte sind platziert.'}</div>`;
+  st.pool.forEach((stepIdx,pi)=>{
+    html += `<div class="order-chip ${isSel('pool',pi)?'selected':''}" onpointerdown="orderDown(event,'${key}','pool',${pi})" onclick="event.stopPropagation()">${q.steps[stepIdx]}</div>`;
+  });
+  html += `</div></div></div>`;
+  if(!st.answered){
+    html += `<div class="order-actions">
+      <button class="primary-btn" ${placed<q.steps.length?'disabled style="opacity:.45;cursor:not-allowed"':''} onclick="orderCheck('${key}')">Prüfen</button>
+      ${placed>0?`<button class="ghost-btn" onclick="orderReset('${key}')">Alles zurücksetzen</button>`:''}
+    </div>`;
+  } else {
+    const right = st.slots.filter((v,i)=>v===i).length;
+    const good = right===q.steps.length;
+    html += `<div class="feedback ${good?'good':'gentle'}"><strong>${good?'Alles in der richtigen Reihenfolge.':`${right} von ${q.steps.length} Schritten am richtigen Platz – so ist es richtig:`}</strong>`;
+    if(!good) html += `<ol class="order-solution">${q.steps.map(s=>`<li>${s}</li>`).join('')}</ol>`;
+    if(q.explain) html += `<div style="margin-top:6px">${q.explain}</div>`;
+    html += `</div>`;
+    html += `<div class="order-actions"><button class="ghost-btn" onclick="orderRetry('${key}')">Nochmals üben</button></div>`;
+  }
+  return html;
+}
+function orderTake(st, where, idx){
+  if(where==='slot'){ const v=st.slots[idx]; st.slots[idx]=null; return v; }
+  return st.pool.splice(idx,1)[0];
+}
+function orderMove(key, from, to){
+  // from: {where, idx}; to: {where:'slot'|'pool', idx}
+  const st = answerState[key];
+  if(from.where===to.where && from.idx===to.idx) return;
+  if(from.where==='pool' && to.where==='pool') return;
+  if(from.where==='slot' && to.where==='slot'){
+    const a=st.slots[from.idx]; st.slots[from.idx]=st.slots[to.idx]; st.slots[to.idx]=a; return;
+  }
+  if(from.where==='pool' && to.where==='slot'){
+    const v = st.pool.splice(from.idx,1)[0];
+    if(st.slots[to.idx]!==null) st.pool.push(st.slots[to.idx]);
+    st.slots[to.idx]=v; return;
+  }
+  if(from.where==='slot' && to.where==='pool'){
+    st.pool.push(orderTake(st,'slot',from.idx));
+  }
+}
+let orderDrag = null;
+window.orderDown = function(ev, key, where, idx){
+  if(answerState[key].answered) return;
+  if(ev.button!==undefined && ev.button!==0) return;
+  ev.stopPropagation();
+  const el = ev.currentTarget;
+  orderDrag = {key, where, idx, el, x0:ev.clientX, y0:ev.clientY, moved:false, ghost:null, over:null, id:ev.pointerId};
+  try{ el.setPointerCapture(ev.pointerId); }catch(e){}
+  el.addEventListener('pointermove', orderPMove);
+  el.addEventListener('pointerup', orderPUp);
+  el.addEventListener('pointercancel', orderPCancel);
+};
+function orderTargetAt(x,y){
+  const els = document.elementsFromPoint ? document.elementsFromPoint(x,y) : [document.elementFromPoint(x,y)];
+  for(const e of els){ const d = e && e.closest && e.closest('[data-odrop]'); if(d) return d; }
+  return null;
+}
+function orderPMove(ev){
+  const d = orderDrag; if(!d) return;
+  const dx=ev.clientX-d.x0, dy=ev.clientY-d.y0;
+  if(!d.moved && Math.hypot(dx,dy)<6) return;
+  ev.preventDefault();
+  if(!d.moved){
+    d.moved=true;
+    const r=d.el.getBoundingClientRect();
+    const g=d.el.cloneNode(true);
+    g.classList.add('order-ghost'); g.style.width=r.width+'px'; g.style.background='#fff';
+    g.style.border='1.5px solid var(--teal)'; g.style.borderRadius='9px';
+    d.offX=d.x0-r.left; d.offY=d.y0-r.top;
+    document.body.appendChild(g); d.ghost=g; d.el.style.opacity='.35';
+  }
+  d.ghost.style.left=(ev.clientX-d.offX)+'px'; d.ghost.style.top=(ev.clientY-d.offY)+'px';
+  const t = orderTargetAt(ev.clientX, ev.clientY);
+  if(d.over && d.over!==t) d.over.classList.remove('hover');
+  if(t) t.classList.add('hover');
+  d.over=t;
+}
+function orderCleanup(){
+  const d=orderDrag; if(!d) return;
+  d.el.removeEventListener('pointermove', orderPMove);
+  d.el.removeEventListener('pointerup', orderPUp);
+  d.el.removeEventListener('pointercancel', orderPCancel);
+  if(d.ghost) d.ghost.remove();
+  if(d.over) d.over.classList.remove('hover');
+  d.el.style.opacity='';
+  orderDrag=null;
+}
+function orderPCancel(){ orderCleanup(); renderTopic(); }
+function orderPUp(ev){
+  const d=orderDrag; if(!d) return;
+  const st=answerState[d.key];
+  if(d.moved){
+    const t = orderTargetAt(ev.clientX, ev.clientY);
+    orderCleanup();
+    if(t){
+      const to = t.dataset.odrop==='slot' ? {where:'slot', idx:parseInt(t.dataset.oidx)} : {where:'pool', idx:-1};
+      orderMove(d.key, {where:d.where, idx:d.idx}, to);
+    }
+    st.selected=null;
+    renderTopic();
+  } else {
+    orderCleanup();
+    // tap: select / deselect, or place selected onto this chip's slot
+    if(st.selected && st.selected.where==='pool' && d.where==='slot'){
+      orderMove(d.key, st.selected, {where:'slot', idx:d.idx}); st.selected=null;
+    } else if(st.selected && st.selected.where==='slot' && d.where==='slot' && st.selected.idx!==d.idx){
+      orderMove(d.key, st.selected, {where:'slot', idx:d.idx}); st.selected=null;
+    } else if(st.selected && st.selected.where===d.where && st.selected.idx===d.idx){
+      st.selected=null;
+    } else {
+      st.selected={where:d.where, idx:d.idx};
+    }
+    renderTopic();
+  }
+}
+window.orderTapTarget = function(key, where, idx){
+  const st=answerState[key];
+  if(st.answered || !st.selected) return;
+  orderMove(key, st.selected, {where, idx});
+  st.selected=null;
+  renderTopic();
+};
+window.orderCheck = function(key){
+  const st=answerState[key];
+  if(st.slots.some(v=>v===null)) return;
+  st.answered=true; st.selected=null;
+  const [topicId, qIndex] = splitKey(key);
+  markAnswered(topicId, parseInt(qIndex));
+  renderTopic();
+};
+window.orderReset = function(key){
+  const st=answerState[key];
+  st.slots.forEach(v=>{ if(v!==null) st.pool.push(v); });
+  st.slots=st.slots.map(()=>null); st.selected=null;
+  renderTopic();
+};
+window.orderRetry = function(key){
+  const [topicId, qIndex] = splitKey(key);
+  const t = allTopics.find(x=>x.id===topicId);
+  answerState[key] = orderInitState(t.questions[parseInt(qIndex)]);
+  renderTopic();
+};
 
 /* ---------------------------------------------------------
    INTERACTIONS
@@ -2078,6 +2343,7 @@ window.answerMultiRow = function(key, i, val){
 };
 window.answerMatchRow = function(key, i, cat){
   const st = answerState[key];
+  if(typeof cat==='number'){ const [tid, qi] = splitKey(key); cat = getTopic(tid).questions[parseInt(qi)].categories[cat]; }
   st.rows[i].selected = cat;
   const allDone = st.rows.every(r=>r.selected!==null);
   if(allDone && !st.answered){
